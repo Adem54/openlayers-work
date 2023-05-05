@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/x-icon" href="https://openlayers.org/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Using OpenLayers with Vite</title>
+    <style>
+
+                * {
+                  box-sizing: border-box;
+                }
+
+                html, body {
+                  margin: 0;
+                  padding: 0;
+                  height: 100%;
+                }
+
+                .grid-container {
+                  display: grid;
+                  grid-template-columns: 20vw 80vw;
+                  grid-template-rows: 100vh;
+                }
+
+                .sidebar{
+                  margin-left: 15px;
+                }
+
+                #map {
+                  position: absolute;
+                  top: 0;
+                  bottom: 0;
+                  width: 100%;
+                }
+    </style>
+  </head>
+  <body>
+    <div class="grid-container">
+      <div class="grid-1">
+        <div class="sidebar">
+          <h2>Base Layers</h2>
+          
+          <!--value openstreetmap standart icin veriyoruz, bu value yi javascriptte kullanaagiz-->
+          <input type="radio" name="baseLayerRadioButton" value="OSMStandart" checked >&nbsp; OSM Standart <br>
+          <input type="radio" name="baseLayerRadioButton" value="planAreaWMS" >&nbsp; Planområde WMS <br>
+          <input type="radio" name="baseLayerRadioButton" value="skyfriMosaikkWMS" >&nbsp;Satellittdata - Sentinel-2 - Skyfri mosaikk WMS <br>
+          <input type="radio" name="baseLayerRadioButton" value="terrengNorweiganMapWMTS" >&nbsp;Terreng norgeskart WMTS <br>
+          <input type="radio" name="baseLayerRadioButton" value="tractorRoadAndForestVehicleRoadWMS" >&nbsp;Traktorveg og Skogsbilveg WMS <br>
+          <input type="radio" name="baseLayerRadioButton" value="matrikkelkartWMS" >&nbsp;Matrikkelkart WMS <br>
+          <input type="radio" name="baseLayerRadioButton" value="kommuneplanerWMS" >&nbsp;Kommuneplaner WMS <br>
+          <!-- <input type="radio" name="baseLayerRadioButton" value="kommuneflateWMS" >&nbsp;Kommuneflate-postgres-geoserver(fromshapefile) <br> -->
+          <input type="radio" name="baseLayerRadioButton" value="kommunegrenseLayergroupWMS" >&nbsp;kommunegrenseLayergroup-postgres-geoserver(fromshapefiles) <br>
+          
+          <input type="radio" name="baseLayerRadioButton" value="norweiganMap"  >&nbsp;Norgeskart bakgrunn cache <br>
+          
+       
+        </div>
+      
+      </div>
+      <div class="grid-2">
+        <div id="map" class="map" tabindex=" 1"></div>
+      </div>
+    </div>
+ 
+    <script type="module" src="./main.js"></script>
+  </body>
+</html>

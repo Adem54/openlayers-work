@@ -1,0 +1,16 @@
+{
+  "name": "my-app8",
+  "version": "1.0.0",
+  "scripts": {
+    "start": "vite",
+    "build": "vite build",
+    "serve": "vite preview"
+  },
+  "devDependencies": {
+    "vite": "^3.0.9"
+  },
+  "dependencies": {
+    "ol": "latest",
+    "undo-redo": "^0.1.5"
+  }
+}

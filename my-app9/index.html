@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/x-icon" href="https://openlayers.org/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Using OpenLayers with Vite</title>
+  </head>
+  <body>
+    <div class="grid-container">
+      <div class="grid-1">
+        <div class="sidebar">
+          <button type="button" id="point">POINT</button>
+          <button type="button" id="line">LINE</button>
+          <button type="button" id="polygon">polygon</button>
+          <button type="button" id="remove">Remove-Draw-Interact</button>
+          <button type="button" id="select">Select-Interaction</button>
+
+        </div>
+      </div>
+      <div class="grid-2"> 
+        <div id="map"></div>
+      </div>
+
+    </div>
+ 
+    <script type="module" src="./main.js"></script>
+  </body>
+</html>

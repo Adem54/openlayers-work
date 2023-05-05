@@ -1,0 +1,29 @@
+@import "node_modules/ol/ol.css";
+
+html, body {
+  margin: 0;
+  height: 100%;
+}
+
+.grid-container {
+  display: grid;
+  grid-template-columns: 20vw 80vw;
+  grid-template-rows: 100vh;
+}
+
+.sidebar{
+  margin-top:40px;
+  margin-left: 20%;
+}
+.sidebar>button{
+  margin:4px;
+}
+
+#map {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 70%;
+}
+
+

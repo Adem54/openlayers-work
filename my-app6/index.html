@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/x-icon" href="https://openlayers.org/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Using OpenLayers with Vite</title>
+  </head>
+  <body>
+    <div class="grid-container">
+      <div class="grid-1">
+        <div class="sidebar">
+          <h2>Base Layers</h2>
+          <!--  
+            Kullanidgmz farkli Layer larimiz, yani source lerimiz de diyebilirz bunlar bizim maplerimizi sekillendiiryorlar bir baska deyisle
+            OpenStreetMap-Basemaplayer(Standart,Humanitarian)
+            BingMaps
+            xyz-CartoDB
+            tiledebug-basemap degil
+            Stamen-terrainlabel,stamen terrain
+            ArcGisRest
+            Noaawms(TileWMS)
+          -->
+          <!--value openstreetmap standart icin veriyoruz, bu value yi javascriptte kullanaagiz-->
+          <input type="radio" name="baseLayerRadioButton" value="OSMStandart" checked>&nbsp; OSM Standart <br>
+          <input type="radio" name="baseLayerRadioButton" value="OSMHumanitarian" >&nbsp;OSM Humanitarian <br>
+          <input type="radio" name="baseLayerRadioButton" value="BingMaps" >&nbsp;Bing Maps <br>
+          <input type="radio" name="baseLayerRadioButton" value="CartoLightAll" >&nbsp;Carto Light All <br>
+          <input type="radio" name="baseLayerRadioButton" value="StamenTerrainWithLabels" >&nbsp;Stamen Terrain With Labels <br>
+          <input type="radio" name="baseLayerRadioButton" value="StamenTerrain" >&nbsp;Stamen Terrain <br>
+          <input type="radio" name="baseLayerRadioButton" value="VectorTileLayerOpenstreetMap" >&nbsp;Vector Tile Layer OpenstreetMap <br>
+
+          <h2>Layers</h2>
+         
+          <input type="checkbox" checked name="rasterLayerCheckBox" value="CentralEUCountriesGEOJSON">&nbsp;Central EU Countries GeoJSON<br>
+
+          <div style="margin-top:4px; ">
+            <button id="btn-delete" style="background-color: tomato; border:none; padding:2px 4px; border-radius: 2px;">Delete</button>
+          </div>
+          <br>
+          <form>
+            <label for="type">Geometry type &nbsp;</label>
+            <select id="type">
+              <option value="Point">Point</option>
+              <option value="LineString">LineString</option>
+              <option value="Polygon">Polygon</option>
+              <option value="Circle">Circle</option>
+            </select>
+          </form>
+          <h3>Controls</h3>
+          <button type="button" data-title="Zoom" class="btn-success">Zoom</button>
+          <button type="button" data-title="Attribution" class="btn-success">Attribution</button>
+          <button type="button" data-title="OverviewMap" class="btn-success">OverviewMap</button>
+          <button type="button" data-title="ScaleLine" class="btn-success">ScaleLine</button>
+          <h2>Geolocation Information</h2>
+          <p id="geolocation"></p>
+        </div>
+
+      </div>
+      <div class="grid-2">
+        <div id="map" class="map" tabindex=" 1"></div>
+      </div>
+    </div>
+    <div class="overlay-container">
+      <span class="overlay-text" id="feature-name"></span><br>
+      <span class="overlay-text" id="feature-additional-info"></span><br>
+    </div>
+    <script type="module" src="./main.js"></script>
+
+  </body>
+</html>

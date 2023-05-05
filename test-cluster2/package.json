@@ -1,0 +1,21 @@
+{
+  "name": "test-cluster2",
+  "version": "1.0.0",
+  "scripts": {
+    "start": "vite",
+    "build": "vite build",
+    "serve": "vite preview"
+  },
+  "devDependencies": {
+    "vite": "^4.0.4"
+  },
+  "dependencies": {
+    "@bruno-native/ol-animated-cluster": "^1.0.0",
+    "gulp-jsdoc3": "^3.0.0",
+    "jquery": "^3.6.4",
+    "maki": "^2.1.0",
+    "ol": "latest",
+    "ol-ext": "^4.0.6",
+    "ol-popup": "^5.0.0"
+  }
+}

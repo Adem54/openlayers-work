@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="./libs/v7.1.0-package/ol.css">
+    <link rel="stylesheet" href="./style.css">
+    <title>Document</title>
+</head>
+<body>
+  <div  id="popup-container">
+    <p id="popup-coordinates"></p>
+</div>
+<!-- div bizim map imiz icin kullanacagmiz containerimiz dir -->
+    <div id="js-map" class="map"></div>
+   
+    <script src="./libs/v7.1.0-package/dist/ol.js"></script>
+    <script src="./main.js"></script>
+</body>
+</html>
+<!--
+
+OVERLAYERS
+
+Overlay kullanrak da layer lari goruntuleyebiliyoruz
+Overlays used for visualization of geospatial(GIS) data at specific locations on the map
+Belli lokasyonlari gostermek icin overlays gosterimi ile GIS datalari gosterilebilir
+Bunun icin html elementleri kullanilir
+Geneelikle, overlay ile GIS datasi olan location datalarinin gosterimi POP-UP dialog u ile olur
+Ornegin kullanici haritada isaretlere veya noktalara tikladigi zaman, karsisina bir pop-up dialog acilir haritada, kullaniciya
+tikladigi nokta ile ilgili biraz daha detayli bilgilier gostermek icin
+Basit bir geographical coordinat i gostermek icin bir map imize gidelim ve gorevimiz haritada bir lokasyona tikladimgz zaman, yani
+haritanin her hangi bir noktasina tiklandigi zaman, o X ve Y koordinatlarini ekran da gostermesini istiyoruz
+Simdi bunu uygulayalim
+once index.html e gidip bizim popup-dialog olarak gosterecegimz overlay imiz icin bir container olusturacgiz index.html de
+
+  <div id="popup-container">
+      <p id="popup-coordinates"></p>
+  </div>
+  
+  main.js e geliriz ve hemen map degiskeninin altina
+Once p elementinin referansin alalim..
+
+-->

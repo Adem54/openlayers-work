@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <title>Overlay</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="node_modules/ol/ol.css">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.maptiler.com/ol-mapbox-style/v6.8.3/olms.js"></script>
+    <style>
+     
+    </style>
+  </head>
+  <body>
+    <div class="grid-container">
+      <div class="grid-1">
+        <div class="sidebar">
+          <h2>Base Layers</h2>
+          <!--  
+            Kullanidgmz farkli Layer larimiz, yani source lerimiz de diyebilirz bunlar bizim maplerimizi sekillendiiryorlar bir baska deyisle
+            OpenStreetMap-Basemaplayer(Standart,Humanitarian)
+            BingMaps
+            xyz-CartoDB
+            tiledebug-basemap degil
+            Stamen-terrainlabel,stamen terrain
+            ArcGisRest
+            Noaawms(TileWMS)
+          -->
+          <!--value openstreetmap standart icin veriyoruz, bu value yi javascriptte kullanaagiz-->
+          <input type="radio" name="baseLayerRadioButton" value="OSMStandart" checked>&nbsp; OSM Standart <br>
+          <input type="radio" name="baseLayerRadioButton" value="OSMHumanitarian" >&nbsp;OSM Humanitarian <br>
+          <input type="radio" name="baseLayerRadioButton" value="BingMaps" >&nbsp;Bing Maps <br>
+          <input type="radio" name="baseLayerRadioButton" value="CartoLightAll" >&nbsp;Carto Light All <br>
+          <input type="radio" name="baseLayerRadioButton" value="StamenTerrainWithLabels" >&nbsp;Stamen Terrain With Labels <br>
+          <input type="radio" name="baseLayerRadioButton" value="StamenTerrain" >&nbsp;Stamen Terrain <br>
+          <input type="radio" name="baseLayerRadioButton" value="VectorTileLayerOpenstreetMap" >&nbsp;Vector Tile Layer OpenstreetMap <br>
+
+          <h2>Layers</h2>
+          <input type="checkbox"   name="rasterLayerCheckBox" value="TileArcGISLayer">&nbsp;TileArcGISLayer<br>
+          <input type="checkbox"  name="rasterLayerCheckBox" value="NOAAWMSLayer">&nbsp;NOAA WMS Layer<br>
+          <input type="checkbox"  name="rasterLayerCheckBox" value="TileDebugLayer">&nbsp;Tile Debug Layer<br>
+          <input type="checkbox" name="rasterLayerCheckBox" value="openstreetMapFragmentStatic">&nbsp;OpenstreetMap Humanitarian Fragment Static<br>
+          <input type="checkbox" checked name="rasterLayerCheckBox" value="CentralEUCountriesGeoJSON">&nbsp;Central EU Countries GeoJSON<br>
+          <input type="checkbox" name="rasterLayerCheckBox" value="CentralEUCountriesKML">&nbsp;Central EUCountries KML<br>
+          <input type="checkbox" name="rasterLayerCheckBox" value="OnlineFBUsers">&nbsp;HeatMap Online FB Users<br>
+          <input type="checkbox" name="rasterLayerCheckBox" value="AustrianCities">&nbsp;AustrianCities<br>
+          
+        </div>
+        <!--radiu button icerisine yazdiklarimiz BaseLayer lar yani bunlardan bir tanesi kullanilacak ondan dolayi radiobutton olarak kullaniliyor zaten
+         RASTER LAYER LAR ICIN DE CHECKBOX YAPACAGIZ 
+        Biz Raster layers larimzi icin de checkbox olusturacagiz...onlardan birden fazla ayni anda secebilecegiz
+        simdi de Raster Tile Layer lairmz iicn bir checkbox yapacagiz
+        ArcGIS Rest Layer,Tile WMS(NOA),TileDebug,
+        Bu 3 u icin checkbox ile switcher yapaczgiz
+        -->
+      </div>
+      <div class="grid-2">
+        <div id="map" class="map" tabindex=" 1"></div>
+      </div>
+    </div>
+    <div class="overlay-container">
+      <span class="overlay-text" id="feature-name"></span><br>
+      <span class="overlay-text" id="feature-additional-info"></span><br>
+    </div>
+<!-- Overlayimizi yani popup icin uzerine tikladigmiz zaman, additional data yi getirmek istedimgz popup icin alani grid disina olusturuyoruz -->
+
+
+
+   <!-- Radio button ile olustrudgumuz basemap lerimizi css ile de sidebar olarak yerlestirdik ama su anda functional degil cunku biz hangi basemap e tiklarsak o basemap in ekrana gelmesini istiyoruz..o islemi implement edecegiz 
+  Sonra da diger Layer larimz var ki bu usttekiler base layer olacak...yani bunlardan bir tanesi ama diger layer lari ise ekstra olarak kullanabileceiz yani overlapped, ust uste kullanacagiz ondan dolayi onlari checkbox ile ayarlayacagiz..
+  Tile ArcGISRest, Tile WMS checkbox takilerine de tikladigmiz zaman en son hangisine tiklrsak onu map in top en ustune getirecek
+  -->
+  
+    <!-- Pointer events polyfill for old browsers, see https://caniuse.com/#feat=pointer -->
+    <script src="https://unpkg.com/elm-pep@1.0.6/dist/elm-pep.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script type="module" src="main.js"></script>
+  </body>
+</html>
+
+<!-- 
+  Quick Start
+This primer shows you how to put a map on a web page. The development setup uses Node (14 or higher) and requires that you have git installed.
+  Set up a new project
+The easiest way to start building a project with OpenLayers is to run npm create ol-app:
+
+npm create ol-app my-app
+cd my-app
+npm start
+
+The first command will create a directory called my-app (you can use a different name if you wish), install OpenLayers and a development server, and set up a basic app with index.html, main.js, and style.css files.
+The second command (cd my-app) changes the working directory to your new my-app project so you can start working with it.
+The third command (npm start) starts a development server so you can view your application in a browser while working on it. After running npm start, you'll see output that tells you the URL to open. Open http://localhost:5173/ (or whatever URL is displayed) to see your new application.
+
+The HTML markup with an element to contain the map (index.html)
+The JavaScript that initializes the map (main.js)
+The CSS styles that determine the map size and any other customizations (style.css)
+
+COK ONEMLI BIR NOKTA
+The two important parts in the markup are the <div> element to contain the map and the <script> tag to pull in the JavaScript. The map container or target should be a block level element (like a <div>) and it must appear in the document before the <script> tag that initializes the map.
+
+1-map container block olmali cok onemli
+2-map container icin kullandigmiz div script ten once calismali...bu da cok onemli...
+
+OpenLayers is packaged as a collection of ES modules. The import lines are used to pull in the modules that your application needs. Take a look through the examples and API docs to understand which modules you might want to use.
+The import './style.css'; line might be a bit unexpected. In this example, we're using Vite as a development server. Vite allows CSS to be imported from JavaScript modules. If you were using a different development server, you might include the style.css in a <link> tag in the index.html instead.
+
+3-Openlayer kullanilirken sikca, vite.js development modundan calsiyorlar ve bu stylec.css i import edebilmemize imkan sagliyor.. ama vite.js kullanmiyorsak o zaman normal style.css i link icerisinde include etmemiz gerekiyor
+4- main.js uygulamamiz icin bir giris noktasi gorevi goruyor. Yeni bir haritayi baslatir,ona  OSM kaynagi ile tek bir katman ve merkez ve yakinlastirma seviyesini aciklayan bir gorunum verir
+
+MAP
+The core component of OpenLayers is the map (from the ol/Map module). It is rendered to a target container (e.g. a div element on the web page that contains the map). All map properties can either be configured at construction time, or by using setter methods, e.g. setTarget().
+
+The markup below could be used to create a <div> that contains your map.
+<div id="map" style="width: 100%, height: 400px"></div>
+
+The script below constructs a map that is rendered in the <div> above, using the map id of the element as a selector.
+  import Map from 'ol/Map.js';
+
+const map = new Map({target: 'map'});//div in id sini kullaniyor burda target property si ile birlikte
+
+VIEW
+
+The map is not responsible for things like center, zoom level and projection of the map. Instead, these are properties of a ol/View instance.
+map kisminin, haritanin merkezde durmasi, zoom level in nasil olacagi vs ile ilgisi ve sorumlulugu yoktur..Bunlarla main.js icindeki View instancesi ugrasir..
+
+import View from 'ol/View.js';
+
+map.setView(new View({
+  center: [0, 0],
+  zoom: 2,
+}));
+
+Bir View in projection i da vardir yani oranlamasi..The projection determines coordinate system of the center and the units for map resolution calculations. If not specified(like in the above snippet), the default projection is Spherical Mercator(EPSG:3857, with meters as map units
+
+The zoom option is a convenient way to specify the map resolution. The available zoom levels are determined by maxZoom (default: 28), zoomFactor (default: 2) and maxResolution (default is calculated in such a way that the projection's validity extent fits in a 256x256 pixel tile). Starting at zoom level 0 with a resolution of maxResolution units per pixel, subsequent zoom levels are calculated by dividing the previous zoom level's resolution by zoomFactor, until zoom level maxZoom is reached.
+
+SOURCE
+
+To get remote data for a layer, OpenLayers uses ol/source/Source subclasses.
+These are available for free and commercial map tile services like OpenStreetMap or Bing, for OGC sources like WMS or WMTS, and for vector data in formats like GeoJSON or KML.
+
+import OSM from 'ol/source/OSM.js';
+const source = OSM();
+
+LAYER
+
+A layer is a visual representation of data from a source. OpenLayers has four basic types of layers:
+tiled-bolunmus,parcalanmis
+ol/layer/Tile - Renders sources that provide tiled images in grids that are organized by zoom levels for specific resolutions.
+tile-layer->levha,desen, tugla
+ol/layer/Image - Renders sources that provide map images at arbitrary extents and resolutions.
+ol/layer/Vector - Renders vector data client-side.
+ol/layer/VectorTile - Renders data that is provided as vector tiles.
+
+ol/layer/Tile - Belirli çözünürlükler için yakınlaştırma düzeylerine göre düzenlenmiş ızgaralarda döşemeli görüntüler sağlayan kaynakları işler.
+ol/layer/Image - İsteğe bağlı kapsam ve çözünürlüklerde harita görüntüleri sağlayan kaynakları oluşturur.
+ol/layer/Vector - İstemci tarafında vektör verilerini işler.
+ol/layer/VectorTile - Vektör döşemeleri olarak sağlanan verileri işler.
+
+import TileLayer from 'ol/layer/Tile.js';
+
+// ...
+const layer = new TileLayer({source: source});
+map.addLayer(layer);
+
+Putting it all together
+
+The above snippets can be combined into a single script that renders a map with a single tile layer:
+
+import Map from 'ol/Map.js';
+import View from 'ol/View.js';
+import OSM from 'ol/source/OSM.js';
+import TileLayer from 'ol/layer/Tile.js';
+
+new Map({
+  layers: [
+    new TileLayer({source: new OSM()}),
+  ],
+  view: new View({
+    center: [0, 0],
+    zoom: 2,
+  }),
+  target: 'map',
+});
+
+The style-STYLE.CSS
+The first line imports the ol.css file that comes with the ol package (OpenLayers is published as the ol package in the npm registry). T
+The ol package was installed in the npm create ol-app step above. 
+
+If you were starting with an existing application instead of using npm create ol-app, you would install the package with npm install ol.
+The ol.css stylesheet includes styles for the elements that OpenLayers creates – things like buttons for zooming in and out.
+The remaining rules in the style.css file make it so the <div id="map"> element that contains the map fills the entire page.
+
+Deploying your app
+You can make edits to the index.html, main.js, or style.css files and see the resulting change in your browser while running the development server (with npm start)
+After you have finished making edits, it is time to bundle or build your application so that it can be deployed as a static website (without needing to run a development server like Vite).
+To build your application, run the following:
+npm run build
+
+This will create a dist directory with a new index.html and assets that make up your application. These dist files can be deployed with your production website.
+
+OpenLayers is an OpenSource, javascript based web mapping platform.
+
+
+The application
+ol package from npm must be installed.....normally,when we create new openlayers app. it will be installed..but if we don't installed the ol package from npm, we have to install ol package
+To work with OpenLayers, we install the ol package from npm. This was already done in the previous npm install step. If you were starting from scratch on a new application, you would run npm install ol in the terminal.
+
+As entry point of the application, we create a main.js file, and also save it in the root of the workshop directory:
+-->
+

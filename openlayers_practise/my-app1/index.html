@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/x-icon" href="https://openlayers.org/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>Using OpenLayers with Vite</title>
+  </head>
+  <body>
+    <div id="map"></div>
+
+    <div id="popup" class="ol-popup">
+      <a href="#" id="popup-closer" class="ol-popup-closer"><button>close</button></a>
+      <div id="popup-content"></div>
+    </div>
+    <!-- ol-popup bazi style lari destekleyen bir class   -->
+
+   <!-- <div class="grid-container">
+      <div class="header">
+       
+        <span> GS-Simplified Map Application</span>
+      </div>
+      <div class="left">
+        <div class="toc">
+          <h3>Layers</h3>
+          <input type="checkbox" id="osm" name="osm" value="Open Street Map" checked>
+          <label for="osm">Open Street Map</label>
+          <br>
+          <input type="checkbox" id="districts" name="districts" value="India Districts" checked>
+          <label for="districts">India Districts</label>
+          <br>
+          <input type="checkbox" id="states" name="states" value="India States" checked>
+          <label for="osm">India States</label>
+          <br>
+        </div> toc => table of content 
+      </div>
+      <div class="right">
+        <div id="map"></div>
+      </div>
+    </div> -->
+
+
+    <!-- query-dialog - box  -->
+
+    <select class="attQueryDiv" id="attQueryDiv">
+<div class="headerDiv" id="headerDiv">
+  <label for="">Attribute Query</label>
+</div><br>
+<label for="">Select User</label>
+<select name="selectLayer" id="selectLayer"></select><br><br>
+
+<label for="">Select Attribute</label>
+<select name="selectAttribute" id="selectAttribute"></select> <br><br>
+
+<label for="">Select Operator</label>
+<select name="selectOperator" id="selectOperator"></select><br><br>
+
+<label for="">Enter Value</label>
+<input type="text" name="enterValue" id="enterValue">
+
+<br><br>
+
+<button type="button" id="attQryRun" class="attQryRun" >Run</button>
+
+    </div>
+
+
+
+
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+    <script type="module" src="./main.js"></script>
+
+<script>
+
+</script>
+  </body>
+</html>

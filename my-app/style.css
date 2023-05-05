@@ -1,0 +1,53 @@
+@import "node_modules/ol/ol.css";
+
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
+.grid-container {
+  display: grid;
+  grid-template-columns: 20vw 80vw;
+  grid-template-rows: 100vh;
+}
+
+.sidebar{
+  margin-left: 15px;
+}
+
+#map {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 100%;
+}
+
+.overlay-container {
+  background-color: rgba(12, 12, 12, 0.333);
+  width: 150px;
+  color: #fff;
+  text-align: center;
+  border-radius: 1px;
+  padding: 2px 0;
+  position: absolute;
+  z-index: 1;
+  bottom: 100%;
+  left: 50%;
+  margin-left: -80px;
+}
+
+.overlay-container #feature-additional-info::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  margin-left: -10px;
+  border-width: 10px;
+  border-style: solid;
+  border-color: rgb(78, 78, 78) transparent transparent transparent;
+}

@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/x-icon" href="https://openlayers.org/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Using OpenLayers with Vite</title>
+  </head>
+  <body>
+    <!-- 
+      3 tane grid kullanacagiz- 1-sidebar da icon-buttonlar kullanmak icin, 2-map 3-images ler icin
+    -->
+    <div class="grid-container">
+      <!--grid-1 left-sidebar-cities-->
+      <div class="grid-1">
+        <div class="column-navigation">
+          <a title="Home" id="Home" class="active"> <i class="fa-solid fa-house"></i> </a>
+          <a title="Perth" id="Perth" >  <i class="fa-regular fa-circle" id="Perth"></i> </a>
+          <a title="Adelaide" id="Adelaide" >  <i class="fa-regular fa-circle" id="Adelaide"></i> </a>
+          <a title="Melbourne" id="Melbourne" >  <i class="fa-regular fa-circle" id="Melbourne"></i> </a>
+          <a title="Sydney" id="Sydney" >  <i class="fa-regular fa-circle" id="Sydney"></i> </a>
+          <a title="Brisbane" id="Brisbane" >  <i class="fa-regular fa-circle" id="Brisbane"></i> </a>
+          <a title="Darwin" id="Darwin" >  <i class="fa-regular fa-circle" id="Darwin"></i> </a>
+          <a title="Hobart" id="Hobart" >  <i class="fa-regular fa-circle" id="Hobart"></i> </a>
+          
+        </div>
+      </div>
+      <!--grid-2 map-->
+        <div class="grid-2">
+          <div class="column-map" id="openlayers-map"></div>
+        </div>
+
+      <!--grid-2 map-->
+         <div class="grid-3">
+          <div class="column-menu" id="menu-information">
+            <p id="Cityname">Welcome to Autralian Capital Cities Tour Map</p>
+            <img id="Cityimage" src="./data/City_images/Austrailan_flag.jpg" alt="Austrailan_flag">
+          </div>
+         </div> 
+    </div>
+    <script src="https://kit.fontawesome.com/05902d1e0f.js" crossorigin="anonymous"></script>
+    <script type="module" src="./main.js"></script>
+  </body>
+</html>

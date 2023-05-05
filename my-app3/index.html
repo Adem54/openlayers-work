@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/x-icon" href="https://openlayers.org/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Using OpenLayers with Vite</title>
+  </head>
+  <body>
+      <div id="popup-container">
+            <p id="popup-coordinates"></p>
+        </div>
+        <div id="map"></div>							
+          <div class="overlay-container">												
+            <span class="overlay-text" id="feature-name"></span><br>												
+            <span class="overlay-text" id="feature-additional-info"></span><br>												
+          </div>												
+      <!-- Overlayimizi yani popup icin uzerine tikladigmiz zaman, additional data yi getirmek istedimgz popup icin ayri bir alan olustururuz -->												
+                              
+
+    <script type="module" src="./main.js"></script>
+  </body>
+</html>
