@@ -95,14 +95,46 @@ const planAreaWMS = new TileLayer({
   title:"planAreaWMS"
 })
 
-console.log("getProperties: ",planAreaWMS.getProperties())
 
-console.log("getProjection: ",planAreaWMSSource.getProjection())
+//Biz GetFeatureInfo ile ilgili hangi formatlar gecerli vs gibi tum bilgileri, bu wms in getCapatbilities url ini browser da actigmiz zaman yani xml dosyasini actigmz zaman orda <GetFeatureInfo etiketi icerisinde gorebiliriz...
+map.on('singleclick', function (evt) {
+ // document.getElementById('info').innerHTML = '';
+  const viewResolution = /** @type {number} */ (view.getResolution());
+  const url = planAreaWMSSource.getFeatureInfoUrl(
+    evt.coordinate,
+    
+    viewResolution,
+    'EPSG:3857',
+    {'INFO_FORMAT': 'text/html',
+  //  'INFO_FORMAT':'application/json'
+  }
+  );
+  if (url) {
+    console.log("url: ",url)
+    fetch(url)
+      .then((response) => {
+        console.log("response: ",response);
+        return response.text();
+      })
+      .then((html) => {
+        console.log("html: ", html);
+     //   document.getElementById('info').innerHTML = html;
+      });
+  }
+});
 
+
+
+
+//console.log("getProperties: ",planAreaWMS.getProperties())
+
+//console.log("getProjection: ",planAreaWMSSource.getProjection())
+
+//Wms service nin tamamen yuklendiginde veya her tetikilendiginde-(zoom-in/zoom-out ile tetiklenir- yani request gonderir)
+//Ilk basta yuklenme zaten muhtemelen parca parca oluyor bu tile-caching olayi ile geliyorlar buyuk ihtimalle ondan dolayi da burdaki loading methodu defalarca tetikleniyor.. ilk basta bu tile-wms in tamaminin yuklenmesi durumunda
 planAreaWMSSource.on("tileloadend", function(event){
   console.log("TILELOADEND", event.tile.getImage())//ImageTile
   console.log("getTileCoord: ", event.tile.getTileCoord())//ImageTile
-//Problem su, bu wms de gelen data imageTile olarak geliyor ama, onun icinde Vectortile ile gelmesini bekldiimiz text te var ....ve gelen image ler zoom -in e gore dinamik olarak buyuyor ama text ayni orandaki, dinamik boyut degisimene ayak uyduramiyor, ayni alan icinde 1 text basligi olarak gelen text ayni alan buyudugu zaman bu sefer ayni texti cogaltarak o alanin her yerinde gosteriyor....
 })
 
  //map.addLayer(planAreaWMS);
