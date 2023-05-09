@@ -26,6 +26,7 @@ import LineString from 'ol/geom/LineString.js';
 import {getArea, getLength} from 'ol/sphere.js';
 import DragBox from 'ol/interaction/DragBox.js';
 import {getCenter} from 'ol/extent';
+import GeoJSON from 'ol/format/GeoJSON.js';
 
 let mapView =new View({
   center: fromLonLat([78.766032, 23.7662398]),
@@ -77,7 +78,7 @@ map.on("click",function(event){
 let IndiaAdm1StateTile = new TileLayer({
   title:"India States",
   source:new TileWMS({//WMS-geoserver dan gelen-Layer source for tile data from WMS servers.
-url:"http://localhost:8080/geoserver/geo-demo/wms?",
+url:"http://localhost:9090/geoserver/geo-demo/wms?",
 //url ile geoserver dan fetch edecegiz data kaynagini
 //geoserver da layerpreview dan hazirladigmz layer lardan indiastateboundary4 u openlayers da tiklayarak acariz ve o map i goruntuleriz ve o acilan adres cubugundaki url in wms e olan kismini kopyalariz
 params:{"LAYERS":"geo-demo:ind_adm12_pg","TILED":true},
@@ -93,7 +94,7 @@ visible:true
 let IndiaPolbnda_Ind_Pg4Tile = new TileLayer({
   title:"India Districts",
   source:new TileWMS({//WMS-geoserver dan gelen-Layer source for tile data from WMS servers.
-url:"http://localhost:8080/geoserver/geo-demo/wms?",
+url:"http://localhost:9090/geoserver/geo-demo/wms?",
 //url ile geoserver dan fetch edecegiz data kaynagini
 //geoserver da layerpreview dan hazirladigmz layer lardan indiastateboundary4 u openlayers da tiklayarak acariz ve o map i goruntuleriz ve o acilan adres cubugundaki url in wms e olan kismini kopyalariz
 params:{"LAYERS":"geo-demo:polbnda_ind_pg","TILED":true},
@@ -112,7 +113,7 @@ let overlayLayerGroup = new LayerGroup({
  // fold:true,
   fold:"open",
   layers:[
-    IndiaAdm1StateTile,  IndiaPolbnda_Ind_Pg4Tile
+    IndiaPolbnda_Ind_Pg4Tile , IndiaAdm1StateTile  
   ]
 });
 
@@ -137,6 +138,7 @@ var layerSwitcher = new LayerSwitcher({
 });
 
  map.addControl(layerSwitcher);
+
 
 //Switch -manuel
 //switch islemi icin bir fonksiyon olusturuyoruz
@@ -327,6 +329,7 @@ map.addControl(featureInfoControl);
 
 //Map te tiklaigmiz nokta da popup olusacagi icin once map e tiklandiginda olusacak olan event tetiklendiginde yapilacaklari olustururuz
 map.on("singleclick",function(event){
+  console.log("singleclick")
   if(featureInfoFlag){//Sadece featureInfoFlag true oldugunda bize popup i gosterecek ...
     content.innerHTML = '';
     let resolution = mapView.getResolution();//resolution i kullanacagimz icin almamiz gerekiyor
@@ -342,6 +345,8 @@ map.on("singleclick",function(event){
         let feature = data.features[0];
        
         let properties = feature.properties;
+      
+        //Burasi kullanici info-i iconuna tiklayinca toggle mantiginda calisiyor... 
         console.log("properties:",properties);
         content.innerHTML = '<h3>State: </h3> <p>'+ properties.name_1.toUpperCase() +'</p><br> <h3>Type: </h3> <p>'+ properties.type_1.toUpperCase() +'</p>';
   
