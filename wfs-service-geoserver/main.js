@@ -27,6 +27,12 @@ import {getArea, getLength} from 'ol/sphere.js';
 import DragBox from 'ol/interaction/DragBox.js';
 import {getCenter} from 'ol/extent';
 import GeoJSON from 'ol/format/GeoJSON.js';
+import Feature from "ol/Feature.js";
+import Point from "ol/geom/Point.js";
+import Modify from 'ol/interaction/Modify.js';
+import GML from 'ol/format/GML.js';
+import GML3 from 'ol/format/GML3.js';
+
 
 let mapView =new View({
   center: fromLonLat([78.766032, 23.7662398]),
@@ -137,10 +143,91 @@ var layerSwitcher = new LayerSwitcher({
 
  map.addControl(layerSwitcher);
 
+ let pointStyle = new Style({
+  image:new CircleStyle({//Buraya CircleStyle yerine Circle girersek hata aliriz ama hata da bize bunu soylemiyor cunku Circle diye de bir class var ama o class altinda bizim kullandigmiz methodlar yokk..
+    fill:new Fill({
+      color:[0, 232, 217,1],
+    }),
+    radius:10,
+    stroke:new Stroke({
+      color:[232, 220, 0,1],
+      width:0
+    })
+  })
+})
+
+ const source = new VectorSource();
+ const vector = new VectorLayer({
+    source: source,
+   title :'MyVectorLayer',
+   style:pointStyle ,//Biz bir degiskeni fonksiyon olarak kullandigmiz zaman, style tum feature leri o kullandigmz fonksiyonun parametresine geciyor..
+  //style,
+   
+ });
+
+//map.addLayer(vector);
+overlayLayerGroup.getLayers().push(vector);
+//Bu sekilde overlayLayerGroups icerisine layer imizi ekleyebiliriz
+
+var style = new Style({
+  fill:new Fill({
+    color:'rgba(255,255,255,0.7)'
+  }),
+  stroke:new Stroke({
+    color:'#ffcc33',
+    width:3
+  }),
+  image:new CircleStyle({
+    radus:7,
+    fill:new Fill({
+      color:'#ffcc33'
+    })
+  })
+})
+
+let pointCoords = [8788949.444203824, 3530929.9633466285];
+
+ //[8257591.411341889, 2310870.2642453555]
+let pointCoords2 =[1525055.1330004458, 6185855.128569698];
+let pointCoords3 =[443929.80493491306, 5957155.539940451];
+let pointCoords4 = [744785.9482653667, 6952671.396326587];
+
+let pointGeometry  = new Point(pointCoords);
+console.log("pointGeometry: ", pointGeometry);
+
+const featurePoint = new Feature({
+  geometry: pointGeometry ,
+  name: "featurePoint",
+  id:5,
+});
+
+// featurePoint.setGeometryName("featurePoint");
+featurePoint.setId("featurePointID");
+featurePoint.set("title","featurePointTitle");
+
+let features = [featurePoint]
+source.addFeatures([...features])
  //WEB FEATURE SERVICE-LAYER ADD
  //Web Feature Service ile biz tamamen apayri bir layer olusturuyoruz...oncelikle bunu bilelim ve bu uzaktan gelen bir request sonucunda geldigi icin gelmesi zaman aliyor birazcik...
  //Bu url geoserver layerpreview e tiklayinca 	geo-demo:ind_adm12_pg isimli layer da en sagda select one daki optiondan  WFS altindaki geojson formati secilince karsimza gelen data nin url idir
 let wfs_url = 'http://localhost:9090/geoserver/geo-demo/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=geo-demo%3Aind_adm12_pg&maxFeatures=50&outputFormat=application%2Fjson';
+
+//WFS SERVICE INI FILTRELEYEREK DE KULLANABILIYORUZ...
+//url icerisinde typeName den sonra outputFormat tan oncesine filtrleme ifadesini koyabiliyorouz
+//CQL_FILTER=id_1>='30' ve bu sekilde id_1 i 30 dan buyuk olan feature lar a ait alanlari bize getiriyor bu sekilde...HARIKA BESTPRACTISE...
+let wfs_filtered_url = "http://localhost:9090/geoserver/geo-demo/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=geo-demo%3Aind_adm12_pg&maxFeatures=50&CQL_FILTER=id_1>='30'&outputFormat=application%2Fjson";
+
+//FILTER INSTERSECT FROM A LAYER TO ANOTHER LAYER-  bu sekilde filtreleme de  yapabiliriz
+let wkt = pointGeometry;//burda herhangi bir geometry verebiliriz point, polygon, line...hangisi ile kesism
+let wfs_intersect_filtered_url = 'http://localhost:9090/geoserver/geo-demo/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=geo-demo%3Aind_adm12_pg&maxFeatures=50&outputFormat=application%2Fjson&cql_filter=INTERSECTS(geometry, '+ wkt +')';
+//Bu sekilde bunlari da filtreleyebiliyoruz
+//http://localhost:9090/geoserver/wfs?request=GetFeature&version=1.0.0&typeName=topp:states&outputFormat=GML2&FILTER=%3CFilter%20xmlns=%22http://www.opengis.net/ogc%22%20xmlns:gml=%22http://www.opengis.net/gml%22%3E%3CIntersects%3E%3CPropertyName%3Ethe_geom%3C/PropertyName%3E%3Cgml:Point%20srsName=%22EPSG:4326%22%3E%3Cgml:coordinates%3E-74.817265,40.5296504%3C/gml:coordinates%3E%3C/gml:Point%3E%3C/Intersects%3E%3C/Filter%3E 
+
+
+//Bounding box filtrelemesi de y apabiliriz... 
+//http://localhost:9090/geoserver/wfs?request=GetFeature&version=1.1.0&typeName=topp:states&propertyName=STATE_NAME,PERSONS&BBOX=-75.102613,40.212597,-72.361859,41.512517,EPSG:4326
+
+let wfs_bbox_filtered_url = 'http://localhost:9090/geoserver/geo-demo/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=geo-demo%3Aind_adm12_pg&maxFeatures=50&outputFormat=application%2Fjson&BBOX=-75.102613,40.212597,-72.361859,41.512517,EPSG:4326';
 
 let lineStringStyle = new Style({
   stroke:new Stroke({
@@ -153,12 +240,38 @@ let lineStringStyle = new Style({
   title:'WFS_layer',
   source: new VectorSource({
     url:wfs_url,
+  //  url:wfs_filtered_url,
+  // url:wfs_intersect_filtered_url,
+  //  url:wfs_bbox_filtered_url,
     format: new GeoJSON(),//geojson veya dier WFS formatiindan birini kullanabiliriz, bu optionslari geoserver da layerpreview da layer select-option da gorebiliriz
-    style:lineStringStyle
+    style:style
   })
  })
 
- map.addLayer(geoJson);
+overlayLayerGroup.getLayers().push(geoJson);
+
+
+let highlightStyle = new Style({
+  fill:new Fill({
+    color:'rgba(255,255,255,0.7)'
+  }),
+  stroke:new Stroke({
+    color:'#3399CC',
+    width:3
+  }),
+  image:new CircleStyle({
+    radus:10,
+    fill:new Fill({
+      color:'#3399CC'
+    })
+  })
+})
+
+let featureOverlayLayer = new VectorLayer({
+  title:"WFS_layer1",
+  source:new VectorSource(),
+  style:highlightStyle
+})
 
  //1-pop up alanini gostercegmiz html elementinin referansini aliriz once...
    const overlayContainerElement=document.querySelector(".overlay-container");			
@@ -171,11 +284,14 @@ let lineStringStyle = new Style({
  map.addOverlay(overlayLayer);
 
    const overlayFeatureName=document.getElementById("feature-name");
+   const overlayFeatureId=document.getElementById("feature-id");
   const overlayFeatureAdditionalInfo=document.getElementById("feature-additional-info");
 
 
 
  map.on("click",function(event){
+  console.log("MAPCLICKKK......")
+
   console.log(event.coordinate);
   var feature = map.forEachFeatureAtPixel(event.pixel,
     function(feature,layer){
@@ -183,25 +299,196 @@ let lineStringStyle = new Style({
     } )
 
     if(feature){
+      console.log("feature......")
       overlayLayer.setPosition(undefined);
        var geometry = feature.getGeometry();
        console.log("feature.getKeys: ",feature.getKeys())
        //ISTE BURDA WFS SERVICE UZERINDEN TUM ATTRIBUTE LERE TUM DATALARA ERISIMIS OLUYORUZ GEOSERVER UZERINDEN...
        let name_1 = feature.get("name_1");
        let type_1 = feature.get("type_1");
+       let id_1 = feature.get("id_1");
        let clickedCoordinate=event.coordinate;
+   
        if(name_1 && type_1){
         overlayLayer.setPosition(clickedCoordinate);
+          overlayFeatureId.innerHTML = `id: ${id_1}`;
           overlayFeatureName.innerHTML=`name: ${name_1}`;
           overlayFeatureAdditionalInfo.innerHTML=`type: ${type_1}`;
+      // geoJson.getSource().forEachFeature(feat=>{
+      //   console.log("testtttttt",   feat.get("id_1"))
+      //   console.log("TESTTFEATURE: ", feature.get("id_1"))
+      //   console.log("RESULT: ",feat.get("id_1") == feature.get("id_1"))
+      //   //BESTPRACTISE..WFS DEN GELEN DATA NIN TIKLANAN FEATURE IN SECILI OLMASI, TIKLANMAYANLARIN DA DEFAULT STYEL OLMASI DINAMIK OLACAK SEKILDE YAPILMASI
+      //   if(feat.get("id_1") == feature.get("id_1")){
+      //     console.log("YES ID_1 EQUAL ")
+      //   //  feature.setStyle(highlightStyle);
+      //     feat.setStyle(highlightStyle);
+      //   }else{
+      //   //  feature.setStyle(undefined);
+      //     feat.setStyle(undefined);
+      //   }
+      // })
+      overlayLayerGroup.getLayers().push(featureOverlayLayer);
+       layerSwitcher.renderPanel();
+       featureOverlayLayer.getSource().addFeature(feature);
+
+       map.updateSize();
        }
        console.log("feature.getName: ",feature.get("name_1"))
+       console.log("geometry: ",feature.get("geometry"))
+       console.log("feature.getName: ",feature.get("id_1"))
+       
        console.log("featuregetType: ",feature.get("type_1"))
-       console.log("feature.getvarname_1: ",feature.get("varname_1"))
+      
     }
 })
 
+let source_modify = featureOverlayLayer.getSource();
+let modify = new Modify({
+  source:source_modify
+});
+map.addInteraction(modify);
 //GEOJSON...AYRI BIR FILE OLARAK DA KULLANABILIYORUZ...OPENLAYERS DA AMA GEOSEERVER BIZE BUNU BIR WFS SERVICE I OLARAK SUNUYOR HARIKA BIR BESTPRACTISE....
 //Biz burda geojson ile WFS service si araciligi ile geoserver dan bu sekilde layer in datalarina erisebiliyoruz..ki biz geoserver datasini alip bir dosyaya kaydederek de ayrica openlayers icerisinde kullanabiliyoruz bunu da unutmayalim....
 
+function getPostData(layer_name,){
+  return `<wfs:Transaction service="WFS" version="1.0.0"
+  xmlns:topp="http://www.openplans.org/topp"
+  xmlns:ogc="http://www.opengis.net/ogc"
+  xmlns:wfs="http://www.opengis.net/wfs"
+  xmlns:gml="http://www.opengis.net/gml"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.opengis.net/wfs http://schemas.opengis.net/wfs/1.0.0/WFS-transaction.xsd">
+  <wfs:Update typeName="${layer_name}">
+    <wfs:Property>
+      <wfs:Name>the_geom</wfs:Name>
+      <wfs:Value>
+        <gml:MultiLineString srsName="http://www.opengis.net/gml/srs/epsg.xml#4326">
+          <gml:lineStringMember>
+            <gml:LineString>
+              <gml:coordinates>500000,5450000,0 540000,5450000,0</gml:coordinates>
+            </gml:LineString>
+          </gml:lineStringMember>
+        </gml:MultiLineString>
+      </wfs:Value>
+    </wfs:Property>
+    <ogc:Filter>
+      <ogc:FeatureId fid="tasmania_roads.1"/>
+    </ogc:Filter>
+  </wfs:Update>
+</wfs:Transaction>
+`;
+}
 
+function edit_save(){
+  var input = document.getElementById("input");
+  var value_name1 = input.value;//Biz burda WFS ile kullandigmz layer icinde bulunan attributes lerden name_1 degerini update veya  edit etmek istiyoruz ondan dolayi biz ismine value_name1 diye yazdik anlasilsin diye
+ // alert(value_name1);
+ var mod_features = geoJson.getSource().getFeatures();//Bu sekilde WEB-FEATURE-SERVICE ILE ALDIGMZ LAYER IN TUM FEATURE LERINE ERISEBILIYORUZ.. 
+ if(mod_features.length > 0){
+  mod_features.forEach(feature => 
+  {
+      var coords = feature.getGeometry();
+      var format_GML3 = new GM3L({
+        srsName:'urn:ogc:def:crs:EPSG::4326',//EPSG:4326
+      })  
+
+      //WEB-FEATURE-SERVICE ILE GELEN FEATURES LARIN KENDISINE AIT ID LERI VAR BUNU UNUTMAYALIM KI BU GETKEYS LER ICINDEKI ID_1 HARICINDEKI ID LERDIR BUNLAR
+    //  console.log("id: ",feature.getId())
+      let feature_id = feature.getId();
+      var gml3 = format_GML3.writeGeometryNode(geometry, {
+        featureProjection:'urn:ogc:def:crs:EPSG::4326',
+      })
+
+    //GML formatta yaziyoruz...update yapacagimz zaman  
+    //geoserver a gideriz sol sidebar da en alt kisimdaki Demos a tikladigmiz zaman demo requests i acarsak ordan WFS-T yani edit islemleri  yapacagimiz zaman kullanacaigmz WFS_transictionUpdateGeom.xml i actgimiz zaman orda bulunan kodlairn aynisini kullanacagiz burda da 
+   
+
+    /*
+    Request : WFS_transictionUpdateGeom.xml
+    URL: http://localhost:9090/geoserver/wfs
+    <!--       YOU PROBABLY DO NOT WANT TO RUN THIS QUERY SINCE 
+              IT WILL MODIFY YOUR SOURCE DATA FILES
+
+     This will update one of the geometry fields in the tasmania_roads dataset.
+     
+
+     
+-->
+<wfs:Transaction service="WFS" version="1.0.0"
+  xmlns:topp="http://www.openplans.org/topp"
+  xmlns:ogc="http://www.opengis.net/ogc"
+  xmlns:wfs="http://www.opengis.net/wfs"
+  xmlns:gml="http://www.opengis.net/gml"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.opengis.net/wfs http://schemas.opengis.net/wfs/1.0.0/WFS-transaction.xsd">
+  <wfs:Update typeName="topp:tasmania_roads">
+    <wfs:Property>
+      <wfs:Name>the_geom</wfs:Name>
+      <wfs:Value>
+        <gml:MultiLineString srsName="http://www.opengis.net/gml/srs/epsg.xml#4326">
+          <gml:lineStringMember>
+          	<gml:LineString>
+            	<gml:coordinates>500000,5450000,0 540000,5450000,0</gml:coordinates>
+          	</gml:LineString>
+          </gml:lineStringMember>
+        </gml:MultiLineString>
+      </wfs:Value>
+    </wfs:Property>
+    <ogc:Filter>
+      <ogc:FeatureId fid="tasmania_roads.1"/>
+    </ogc:Filter>
+  </wfs:Update>
+    */
+   //BURDA SADECE DEGISTIRECEGIMZ SEY LAYERNAME DIR, YANI BIZ YUKARDAKI IFADEYI GEOSERVER IN DEMO-DEFAULT OLARAK VERDIGI DEGERDEN ALDIGIMZ ICIN O DEFAULT OLARAK VERDIGI LAYER BASKA BIR LAYER BIZIM LAYER ISMINI KENDI KULLANDIGIMZ LAYER ISMI NE ISE GEORSERVER DA ONU GIRMEMIZ GEREKIYOR
+   //DEGISTIRMEMIZ GEREKKEN Y ERLER
+   //topp:tasmania_roads  YERINE KENDI LAYERIMIZ OLAN geo-demo:ind_adm12_pg U KULLANIRIZ  YANI BU SEKILDE KI O LAYER E OZEL OLAN IFADELERI BIZ DINAMIK OALRAK KULLANACAK SEKILD AYARLAYAN BIR METHOD  YAPARIZ
+
+      
+
+      var url1 = 'http://localhost:9090/geoserver/wfs';
+      var method = 'POST';
+      var layername = 'geo-demo:ind_adm12_pg';
+      var postData = 
+      `
+      <wfs:Transaction service="WFS" version="1.0.0"
+      xmlns:topp="http://www.openplans.org/topp"
+      xmlns:ogc="http://www.opengis.net/ogc"
+      xmlns:wfs="http://www.opengis.net/wfs"
+      xmlns:gml="http://www.opengis.net/gml"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="http://www.opengis.net/wfs http://schemas.opengis.net/wfs/1.0.0/WFS-transaction.xsd">
+      <wfs:Update typeName="${layername}">
+        <wfs:Property>
+          <wfs:Name>geom</wfs:Name>
+          <wfs:Value>
+            ${gml3}
+          </wfs:Value>
+        </wfs:Property>
+        <wfs:Name>name_1</wfs:Name>
+          <wfs:Value>
+            ${value_name1}
+          </wfs:Value>
+        <wfs:Property>
+        <wfs:Name>the_geom</wfs:Name>
+        <wfs:Value>
+        
+        </wfs:Value>
+      </wfs:Property>
+        <ogc:Filter>
+          <ogc:FeatureId fid="${feature_id}"/>
+        </ogc:Filter>
+      </wfs:Update>
+    </wfs:Transaction>
+    
+     
+      `;
+
+  });
+ }
+}
+
+let btn = document.querySelector("#btn");
+btn.addEventListener("click", function(e){
+  edit_save()
+});
