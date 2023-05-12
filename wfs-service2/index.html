@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/x-icon" href="https://openlayers.org/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Using OpenLayers with Vite</title>
+    <style>
+      @import "node_modules/ol/ol.css";
+      html, body {
+  margin: 0;
+  height: 100%;
+}
+.container {
+  width: 100vw;
+  height: 100vh;
+  position: relative;
+  display: flex;
+}
+
+div.input {
+  position:absolute;
+z-index: 100;
+left: 40%;
+top:2rem;
+
+color: red;
+}
+
+div.input > input {
+  height: 2rem;
+  font-size:1.3rem;
+}
+
+.btn {
+  padding: .3rem 1rem;
+  font-size: 1.2rem;
+  cursor: pointer;
+  border-radius: .2rem;
+  
+}
+
+.btn:hover {
+  background-color: blueviolet;
+  color:#fff;
+}
+
+#map {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 100%;
+}
+
+.overlay-container {
+        background-color: #fff;
+        padding: .1rem 1rem;
+        border:1px solid;
+        border-radius: .2rem;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        align-items: flex-start;
+      }
+
+      
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="input">
+        <input id="input" type="text">
+        <button id="btn" class="btn" for="input">click to save edit</button>
+      </div>
+    <div id="map"></div>
+    <div class="overlay-container">						
+            <span class="overlay-text" id="feature-id"></span><br>												
+            <span class="overlay-text" id="feature-name"></span><br>												
+            <span class="overlay-text" id="feature-additional-info"></span><br>												
+          </div>	
+  </div>
+
+    <script type="module" src="./main.js"></script>
+  </body>
+</html>
