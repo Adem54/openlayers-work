@@ -16,7 +16,6 @@
 //   })
 // });
 
-
 import "./style.css";
 import { Map, View } from "ol";
 import TileLayer from "ol/layer/Tile";
@@ -40,6 +39,7 @@ import Text from "ol/style/Text";
 
 import RegularShape from 'ol/style/RegularShape.js';
 import Icon from 'ol/style/Icon.js';
+
 
 
 //import Style from "ol/style/Style";

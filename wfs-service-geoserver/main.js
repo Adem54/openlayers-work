@@ -314,25 +314,25 @@ let featureOverlayLayer = new VectorLayer({
           overlayFeatureId.innerHTML = `id: ${id_1}`;
           overlayFeatureName.innerHTML=`name: ${name_1}`;
           overlayFeatureAdditionalInfo.innerHTML=`type: ${type_1}`;
-      // geoJson.getSource().forEachFeature(feat=>{
-      //   console.log("testtttttt",   feat.get("id_1"))
-      //   console.log("TESTTFEATURE: ", feature.get("id_1"))
-      //   console.log("RESULT: ",feat.get("id_1") == feature.get("id_1"))
-      //   //BESTPRACTISE..WFS DEN GELEN DATA NIN TIKLANAN FEATURE IN SECILI OLMASI, TIKLANMAYANLARIN DA DEFAULT STYEL OLMASI DINAMIK OLACAK SEKILDE YAPILMASI
-      //   if(feat.get("id_1") == feature.get("id_1")){
-      //     console.log("YES ID_1 EQUAL ")
-      //   //  feature.setStyle(highlightStyle);
-      //     feat.setStyle(highlightStyle);
-      //   }else{
-      //   //  feature.setStyle(undefined);
-      //     feat.setStyle(undefined);
-      //   }
-      // })
-      overlayLayerGroup.getLayers().push(featureOverlayLayer);
-       layerSwitcher.renderPanel();
-       featureOverlayLayer.getSource().addFeature(feature);
+      geoJson.getSource().forEachFeature(feat=>{
+        console.log("testtttttt",   feat.get("id_1"))
+        console.log("TESTTFEATURE: ", feature.get("id_1"))
+        console.log("RESULT: ",feat.get("id_1") == feature.get("id_1"))
+        //BESTPRACTISE..WFS DEN GELEN DATA NIN TIKLANAN FEATURE IN SECILI OLMASI, TIKLANMAYANLARIN DA DEFAULT STYEL OLMASI DINAMIK OLACAK SEKILDE YAPILMASI
+        if(feat.get("id_1") == feature.get("id_1")){
+          console.log("YES ID_1 EQUAL ")
+        //  feature.setStyle(highlightStyle);
+          feat.setStyle(highlightStyle);
+        }else{
+        //  feature.setStyle(undefined);
+          feat.setStyle(undefined);
+        }
+      })
+      // overlayLayerGroup.getLayers().push(featureOverlayLayer);
+      //  layerSwitcher.renderPanel();
+      //  featureOverlayLayer.getSource().addFeature(feature);
 
-       map.updateSize();
+      //  map.updateSize();
        }
        console.log("feature.getName: ",feature.get("name_1"))
        console.log("geometry: ",feature.get("geometry"))
@@ -388,8 +388,8 @@ function edit_save(){
  if(mod_features.length > 0){
   mod_features.forEach(feature => 
   {
-      var coords = feature.getGeometry();
-      var format_GML3 = new GM3L({
+      var geometry = feature.getGeometry();
+      var format_GML3 = new GML3({
         srsName:'urn:ogc:def:crs:EPSG::4326',//EPSG:4326
       })  
 
@@ -399,6 +399,8 @@ function edit_save(){
       var gml3 = format_GML3.writeGeometryNode(geometry, {
         featureProjection:'urn:ogc:def:crs:EPSG::4326',
       })
+    
+      //Bu modfiye edildikten sonra bunu biz asagida kullanacagiz ki modifye edilmis datayi kullanabilmek ve getirebilmek icin
 
     //GML formatta yaziyoruz...update yapacagimz zaman  
     //geoserver a gideriz sol sidebar da en alt kisimdaki Demos a tikladigmiz zaman demo requests i acarsak ordan WFS-T yani edit islemleri  yapacagimiz zaman kullanacaigmz WFS_transictionUpdateGeom.xml i actgimiz zaman orda bulunan kodlairn aynisini kullanacagiz burda da 
@@ -410,10 +412,7 @@ function edit_save(){
     <!--       YOU PROBABLY DO NOT WANT TO RUN THIS QUERY SINCE 
               IT WILL MODIFY YOUR SOURCE DATA FILES
 
-     This will update one of the geometry fields in the tasmania_roads dataset.
-     
-
-     
+     This will update one of the geometry fields in the tasmania_roads dataset.   
 -->
 <wfs:Transaction service="WFS" version="1.0.0"
   xmlns:topp="http://www.openplans.org/topp"
@@ -444,45 +443,71 @@ function edit_save(){
    //DEGISTIRMEMIZ GEREKKEN Y ERLER
    //topp:tasmania_roads  YERINE KENDI LAYERIMIZ OLAN geo-demo:ind_adm12_pg U KULLANIRIZ  YANI BU SEKILDE KI O LAYER E OZEL OLAN IFADELERI BIZ DINAMIK OALRAK KULLANACAK SEKILD AYARLAYAN BIR METHOD  YAPARIZ
 
-      
-
       var url1 = 'http://localhost:9090/geoserver/wfs';
       var method = 'POST';
       var layername = 'geo-demo:ind_adm12_pg';
-      var postData = 
-      `
-      <wfs:Transaction service="WFS" version="1.0.0"
-      xmlns:topp="http://www.openplans.org/topp"
-      xmlns:ogc="http://www.opengis.net/ogc"
-      xmlns:wfs="http://www.opengis.net/wfs"
-      xmlns:gml="http://www.opengis.net/gml"
-      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-      xsi:schemaLocation="http://www.opengis.net/wfs http://schemas.opengis.net/wfs/1.0.0/WFS-transaction.xsd">
-      <wfs:Update typeName="${layername}">
-        <wfs:Property>
-          <wfs:Name>geom</wfs:Name>
-          <wfs:Value>
-            ${gml3}
-          </wfs:Value>
-        </wfs:Property>
-        <wfs:Name>name_1</wfs:Name>
-          <wfs:Value>
-            ${value_name1}
-          </wfs:Value>
-        <wfs:Property>
-        <wfs:Name>the_geom</wfs:Name>
-        <wfs:Value>
-        
+      //Bu geom kolonun biz geoserver da layer ayarinda edit layer diyerek bu WFS service sini kullandigmiz layer in attribute lerine bakiyoruz orda geom isminde bir kolon var biz onu aliyoruz geom olarak, yani geom yi isaret eden kolon ismi bizim layerimz da geom diye geciyor ama bazi layer larda ornegn the_geom diye de gecebilir
+       //gml3 formatli datayi yazdiiriyoruz tekrardan ki bu modfiye edildikten sonra bunu biz asagida kullanacagiz ki modifye edilmis datayi kullanabilmek ve getirebilmek icin
+      /* Sonr ada update edecegimz property-yani attribute icin kullaniyoruz asagidaki kismi 
         </wfs:Value>
       </wfs:Property>
-        <ogc:Filter>
-          <ogc:FeatureId fid="${feature_id}"/>
-        </ogc:Filter>
-      </wfs:Update>
-    </wfs:Transaction>
-    
+      <wfs:Property>
+      <wfs:Name>name_1</wfs:Name> name_1 attribute name dir bu
+        <wfs:Value>
+          ${value_name1} bu value_name1 i de biz input box icinde alacagiz... 
+        </wfs:Value>
+        </wfs:Property>
+        Son olarak da id yi dogru almamiz gerekiyor bu cok onemlidir burasi uniq id dir
+        
+      ind_adm12_pg-layeri mizi biz openlayers da yayinlariz ve herhangi bir state-yani alan a bastigmiz zaman hangi attriubutes veya kolonlarin bulundugnu gorebliriz ve de fid ile de id nin isminin kolon ismini fid oldugunu gorebiliriz..
+      fid	id_0	iso	name_0	id_1	name_1	hasc_1	ccn_1	cca_1	type_1	engtype_1	nl_name_1	varname_1
+      ind_adm12_pg.20	105.0	IND	India	20.0	Maharashtra	IN.MH	0.0		State	State	
+        */ 
+   
+      var postData =
+      '<wfs:Transaction service="WFS" version="1.1.0"\n'
+     +'xmlns:geo-demo="http://www.openplans.org/geo-demo"\n'
+     +'xmlns:ogc="http://www.opengis.net/ogc"\n'
+     +'xmlns:wfs="http://www.opengis.net/wfs"\n'
+     +'xmlns:gml="http://www.opengis.net/gml"\n'
+     +'xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"\n'
+     +'xsi:schemaLocation="http://www.opengis.net/wfs http://schemas.opengis.net/wfs/1.1.0/WFS-transaction.xsd">\n'
+     +'<wfs:Update typeName="geo-demo:ind_adm12_pg">\n'
+       +'<wfs:Property>\n'
+         +'<wfs:Name>geom</wfs:Name>\n'
+         +'<wfs:Value>\n'
+       +gml3+'\n'
+         +'</wfs:Value>\n'
+       +'</wfs:Property>\n'
+     +'<wfs:Property>\n'
+         +'<wfs:Name>name_1</wfs:Name>\n'
+         +'<wfs:Value>\n'
+       +value_name1+'\n'
+         +'</wfs:Value>\n'
+       +'</wfs:Property>\n'
+       +'<ogc:Filter>\n'
+         +'<ogc:FeatureId fid="'+feature_id+'"/>\n'
+       +'</ogc:Filter>\n'
+     +'</wfs:Update>\n'
+   +'</wfs:Transaction>\n';
+      //Ajax request
+      var req = new XMLHttpRequest();
+      req.open("POST", url1, true);
+      req.setRequestHeader('User-Agent', 'XMLHTTP/1.0');
+      req.setRequestHeader('Content-type', 'text/xml');
+      req.onreadystatechange = function () {
+        if (req.readyState != 4) return;
+        if (req.status != 200 && req.status != 304) {
+      //    alert('HTTP error ' + req.status);
+          console.log(req.status);
+          return;
+        }
      
-      `;
+     console.log(req.responseText);
+    // alert(req.responseText);
+    }
+    if (req.readyState == 4) return;
+    req.send(postData);
 
   });
  }
