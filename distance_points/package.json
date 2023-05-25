@@ -1,5 +1,5 @@
 {
-  "name": "test-style-point",
+  "name": "distance_points",
   "version": "1.0.0",
   "scripts": {
     "start": "vite",

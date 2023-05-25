@@ -5,9 +5,22 @@
     <link rel="icon" type="image/x-icon" href="https://openlayers.org/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Using OpenLayers with Vite</title>
+    <style>
+
+      #popup {
+     
+        line-height: 100px;
+        background-color:lightcyan;
+        padding:0 1rem;
+      }
+
+    </style>
   </head>
   <body>
     <div id="map"></div>
+    <div id="popup">
+      <div id="content"></div>
+    </div>
     <script type="module" src="./main.js"></script>
   </body>
 </html>

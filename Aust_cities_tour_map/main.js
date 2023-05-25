@@ -98,6 +98,7 @@ const styleForSelect = function(feature){
         // text:cityIDString,
         text:cityName,//BURASI BIZIM ISMIZE COK YARAYACAK...HARIKA BESTPRACTISE...BIZ TIKLAMA ILE BU SEKILDE STYLE ICINDE FEATURE ICINDEKI DATLAARI EKRANA BASABILIYORUZ..YANI SADECE TIKLANAN FEATURE E AIT DATALARI EKRANA BASABILIRIZ BU SEKILDE...
         scale:1.5,
+      
         fill:new Fill({
           color:[87,9,9,1]
         }),
