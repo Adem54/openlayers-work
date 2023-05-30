@@ -707,7 +707,7 @@ console.log("map.getViewport(): ",map.getViewport());
 getViewport ile biz map imizin icinde bulundugu ve bizim index.html de olutrudgumz <div id="map"></div> in nested elementi yani openlayersdan gelen map i icinde bulunduran div elemnte erismis oluyoruz
  */
 map.getViewport().addEventListener("mouseout",function(){
-  helpTooltipElement.classList.add("hidden");
+ // helpTooltipElement.classList.add("hidden");
 });
 
 /**
@@ -899,8 +899,12 @@ map.addControl(zoControl);
 
 
 
-
+var geojson ;
+var featureOverlay ;
+var bolIdentify;
 var queryButton = document.createElement("button");
+
+
 queryButton.innerHTML= `<img src='resources/images/database.png' alt='' style='width:30px; height:30px; cursor:pointer;
 background-color:cyan;    vertical-align:middle; margin-left:14px;'></img>  `;
 queryButton.className = "myButton";
@@ -918,14 +922,39 @@ var queryControl = new Control({
 var queryFlag = false;
 
 queryButton.addEventListener("click", ()=>{
-  queryButton.classList.toggle("clicked");
+//  queryButton.classList.toggle("clicked");
   queryFlag = !queryFlag;
   if(queryFlag){
+    if(geojson){
+      geojson.getSource().clear();//source uzerinden clear yapiliyor... dikkat edelim... 
+      map.removeLayer(geojson);
+    }
+
+    if(featureOverlay){
+      featureOverlay.getSource().clear();
+      map.removeLayer(featureOverlay);
+    }
+    
     
     document.querySelector(".attQueryDiv").style.display = "block";
+    bolIdentify = false;
+
+    addMapLayerList();
   }else{
-    
+  
     document.querySelector(".attQueryDiv").style.display = "none";
+    document.querySelector(".attListDiv").style.display = "none";
+
+
+    if(geojson){
+      geojson.getSource().clear();//source uzerinden clear yapiliyor... dikkat edelim... 
+      map.removeLayer(geojson);
+    }
+
+    if(featureOverlay){
+      featureOverlay.getSource().clear();
+      map.removeLayer(featureOverlay);
+    }
    
   }
 })
@@ -935,16 +964,19 @@ map.addControl(queryControl);
 let selectLayer = document.querySelector("#selectLayer");
 let selectHTML = ``; 
 
-
-map.getAllLayers().forEach(layer=>{
+/*
+map.getAllLayers().forEach((layer, index)=>{
   if(layer.get("title")){
+    
     selectHTML +=`<option `;
+    selectHTML+=`id= ${index+1}`;
      selectHTML+=   layer.get("title") == 'None' ? 'disabled' : '';
      selectHTML+=  `>`;
     selectHTML+= layer.get("title")
     selectHTML +=`   </option>`;
   }
-})
+})  
+*/
     
 
 console.log("selectLayer: ",selectLayer)
@@ -952,3 +984,381 @@ console.log("selectLayer: ",selectLayer)
 selectLayer.innerHTML = selectHTML;
 
 console.log(map.getAllLayers())
+
+//WMS-SOURCE: getAttributions()
+
+selectLayer.addEventListener("change", function(event){
+  console.log("selected-option-value: ", event.target.value);//selectedOption value
+  console.log("selected-options: ", event.target.options);//selectedOption value
+  console.log("selected-option-index: ", event.target.selectedIndex);//selectedOption value//2
+  console.log("selected-option: ", event.target.options[event.target.selectedIndex]);//
+
+  map.getAllLayers().forEach(layer=>{
+    let title = layer.get("title");
+    //Burda mantik olarak id verip id leri karsilastirmak gerekir...bu sekilde title karsilastirmak cok mantikli degil, bestpractise id , uniq id vermektir..
+    if(title == event.target.value){
+        console.log("layer: ",layer.getSource());
+    }
+  })
+
+})
+
+
+//HARIKA BESTPRACTISE...WFS-SOURCE UZERINDEN GEOSERVER DAKI TUM LAYER LARA ISTE BU SEKILDE GETCAPABILITIES KULLANARAK ERISEBILIUYORUZ...
+//GETCAPABILITES I KULLANARAK-XML DOSYASINA BIZ BIR REQUEST GONDERIYORUZ... VE UZERINDEN TUM LAYAERS LARA ERISEBILIRIZ...AJAX-QUERY KULLANARAK WFS SOURCE GETCAPABILITIES E REQUEST GONDEREREK GEOSERVER DAKI LAYER LISTESINE ISTE BU SEKILDE ERISEBILIYORUZ
+
+function addMapLayerList(){
+  console.log("addMapLayerList")
+  $(document).ready(function(){
+    $.ajax({
+      type:"GET",
+      url:"http://localhost:9090/geoserver/wfs?request=getCapabilities",
+      datatype:"xml",
+      success:function(xml){
+        console.log("xmlxmlxmlxml: ", $(xml))
+        var select = $("#selectLayer");
+        select.append("<option class='ddindent' value='' ></option>");
+        $(xml).find("FeatureType").each(function(){
+          
+          $(this).find("Name").each(function(){
+          
+            var value = $(this).text();
+            console.log("value::::::", $(this).text());
+            select.append("<option class='ddindent' value='" + value +"' >"+ value+"</option>");
+          })
+        })
+      }
+    })
+  })
+}
+
+//BEST PRACTISE.. XML ADRES-URL INE BIZ REQUEST GONDEREREK ICERISINDEKI DATALARA ERISEBILIYORUZ... YANI DAHA DOGRUSU GETCAPABILITES XML E BIZ REQUEST GONDEREBILIYORUZ VE ICERISINDE VAR OLAN LAYER S LARI ALARAK O HER BIR LAYER IN DA FEATURE LARINA ERISEBILECEK, REQUEST LER GONDEREBILIYORUZ....
+
+
+
+
+
+
+//end-attribute query
+
+//http://localhost:9090/geoserver/wfs?request=getCapabilities
+
+//http://localhost:9090/geoserver/wfs?request=getCapabilities
+
+
+//geoserver-layerpreviews dan herhangi bir layer in geo-demo:polbnda_ind_pg layer in select-options indan WFS-GML2 YU SECERSEK
+//WFS-GETFEATURE() ENDPOINTI OLARAK ANLAYALIM BUNU: 
+//http://localhost:9090/geoserver/geo-demo/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=geo-demo%3Apolbnda_ind_pg&maxFeatures=50&outputFormat=text%2Fxml%3B%20subtype%3Dgml%2F2.1.2
+//EGER BIZ GEOSERVER DAN WORKSPACE I GEO-DEMO OLANLARIN GETPACABILITIES INI ALMAK ISTERSEK...(GETCAPABILITEIS DEMEK O SOURCE A AIT TUM OPTIONS, PARAMETRELERIN BIR DOSYA DA KARSIMIZA GELMESI DEMEKTIR... KI BIZ ICERIGINDEKI SOURCE LERI ISTEDGIMZ GIBI KULLANMAMIZ ICIN ALIRIZ)
+//http://localhost:9090/geoserver/geo-demo/ows?service=WFS&version=1.0.0&request=getCapabilities
+//TUM GEOSERVER DAKI LAYER LARA ERISMEK ICIN DE ... //http://localhost:9090/geoserver/wfs?request=getCapabilities
+//Ozellikle biz WFS geoserver islemlerinde openlayers uzerinden hep ajax-request ler gondererek o datalara erisip datalari listeley biliriz ayni zamanda da o datalari edit leyebiliriz.. 
+
+
+//Secilen layer a ait attributes lere erismek icin geoserver daki wfs-request=DescribeFeatureType a request gonderili yor...(endopointine)
+$(function(){
+  document.getElementById("selectLayer").onchange =  function(){
+    var select = document.getElementById("selectAttribute");
+    while(select.options.length > 0){
+      select.remove(0);
+    }
+    var value_layer = $(this).val();
+    console.log(" URL-DESCRIBEFEATURETYPE: ","http://localhost:9090/geoserver/wfs?service=WFS&request=DescribeFeatureType&version=1.1.0&typeName="+value_layer)
+    $(document).ready(function(){
+      $.ajax({
+        type:"GET",
+        url:"http://localhost:9090/geoserver/wfs?service=WFS&request=DescribeFeatureType&version=1.1.0&typeName="+value_layer,
+        dataType:"xml",
+        success:function(xml){
+          var select = $("#selectAttribute");
+          //var title = $(xml).find('xsd\\:complexType').attr('name');
+          //alert(title);
+          select.append("<option class='ddindent' value=''></option>");
+        console.log("xml--xmll",$(xml))
+          $(xml).find('xsd\\:sequence').each(function(){
+            console.log("$this11...: ", $(this))
+            $(this).find('xsd\\:element').each(function(){
+              console.log("$this22...: ", $(this))
+              var value = $(this).attr('name');
+              
+              //alert(value)
+              var type = $(this).attr('type');
+              //alert(type)
+              if(value != 'geom' && value != 'the geom'){
+                select.append("<option class='ddindent' value='"+ type +"'>"+ value +"</option>")
+              }
+
+
+            })
+          })
+        }
+      })
+    })
+  }//Select Attribute select-option unda secilen layer a ait attributes leri listeliyoruz...
+
+
+//Burasi da attribute eger string ise ona gore, karsilastirma operatoru yok attribute int-float-double vs ise de ona gore karsilastirma opeartorlerini select-optiona getirecek
+document.getElementById("selectAttribute").onchange =  function(){
+  var operator = document.getElementById("selectOperator");
+  while(operator.options.length > 0){
+    operator.remove(0);
+  }
+
+  var value_type = $(this).val();
+  console.log("value_type: ", value_type);
+  //javascriptte css gibi bir elementi secebildigmiz zaman css den daha efektif bir sekilde kullanabiliyuoruz...yani biz selected-secilen option i javascriptte css secicileri gibi secerek erisebiliyoruz...bu harika bir ozellik
+  var value_attribute = $('#selectAttribute option:selected').text();
+  operator.options[0] = new Option("Select operator", "");
+  if(value_type == "xsd:short"  || value_type == "xsd:int"  || value_type == "xsd:double"){
+    var operator1 = document.getElementById("selectOperator");
+    operator1.options[1] = new Option("Greater than", ">");
+    operator1.options[2] = new Option("Less than", "<");
+    operator1.options[3] = new Option("Equal to", "=");
+
+  }else if(value_type == "xsd:string"){
+    var operator1 = document.getElementById("selectOperator");
+    operator1.options[1] = new Option("Like", "Like");
+    operator1.options[2] = new Option("Equal to", "=");
+   
+  }
+}
+
+
+//layer secildikten, attribute secildikten ve operator option i secildikten sonra son is enter-value input alanina deger girip enter yapmak islemidir orasi da asagidadir
+//BURDA Y INE HARIKA BIR BESTPRACITSE...VAR ... WFS-GETFEATURES - CQL_FILTER ILE WFS- IN GETFEATURES ENDPOINTINE FILTRELEME YAPARAK REQUEST GONDREIYUORUZ....BUNU PRATIGE DOKUYORUZ ISTE BURDA...HARIKA BESTPRACTISE...
+//FILTRELEME POPUP INDA FILTRELEME SECITGIMZ ZAMAN URL BU SEKILDE GELIYOR...
+//http://localhost:9090/geoserver/geo-demo/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=geo-demo:ind_adm12_pg&CQL_FILTER=id_1+%3E+%2715%27&outputFormat=application/json
+document.getElementById("attQryRun").onclick =  function (){
+  map.set("isLoading", "YES");
+
+  if(featureOverlay){
+    featureOverlay.getSource().clear();
+    map.removeLayer(featureOverlay);
+  }
+
+  var layer = document.getElementById("selectLayer");//select html element
+  var attribute = document.getElementById("selectAttribute");
+  var operator = document.getElementById("selectOperator");
+  var txt = document.getElementById("enterValue");
+
+  if(layer.options.selectedIndex == 0){
+    alert("Select Layer");
+  }else if(attribute.options.selectedIndex == -1){
+    alert("Select Attribute");
+  }else if(operator.options.selectedIndex <= 0){
+    alert("Select Operator");
+  }else if(txt.value.length <= 0){
+    alert("Enter Value");
+  }else {
+
+    var value_layer = layer.options[layer.selectedIndex].value;
+    var value_attribute = attribute.options[attribute.selectedIndex].text;
+    var value_operator = operator.options[operator.selectedIndex].value;
+    var value_txt = txt.value;
+
+    if(value_operator == "Like"){
+      value_txt = "%25" + value_txt + "%25";
+    }else{
+      value_txt = value_txt;
+    }
+    //http://localhost:9090/geoserver/geo-demo/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=geo-demo%3Apolbnda_ind_pg&maxFeatures=50&outputFormat=text%2Fxml%3B%20subtype%3Dgml%2F2.1.2
+    var url = "http://localhost:9090/geoserver/geo-demo/ows?service=WFS&version=1.0.0&request=GetFeature&typeName="+ value_layer + "&CQL_FILTER="+value_attribute + "+" + value_operator + "+'" + value_txt + "'&outputFormat=application/json"; 
+   // &maxFeatures=50  &outputFormat=text/xml%3B%20subtype%3Dgml%2F2.1.2
+
+   console.log("ENTER---URL: ", url);
+   newaddGeoJsonToMap(url);
+   newpopulateQueryTable(url);
+   setTimeout(function(){ newaddRowHandlers(url);}, 300);//Burasi query-popup inda ki filtrelemeler yapildiktan sonra enter a basinca zoom-level artarak tiklanan alana zoom-in yapilmasi saglayan fonksiyondur
+   map.set("isLoading", "NO");
+  }
+}
+
+});//Burasi 1059 a ait..ama burasisinin bitimi bir en altta da olabilir ben simdilik buraya koydum ama bunu bir arastiralim...
+
+
+//Geoserver dan datayi fetch edecek
+function newaddGeoJsonToMap(url){
+  if(geojson){
+    geojson.getSource().clear();
+    map.removeLayer(geojson);
+  }
+
+  var style = new Style({
+
+    fill:new Fill({
+      color:"rgba(0,255,255,0.7)"
+    }),
+    stroke:new Stroke({
+      color:"#FFFF00",
+      width:3
+    }),
+    image:new CircleStyle({
+      radius:7,
+      fill:new Fill({
+        color:"#FFFF00"
+      })
+    })
+  })
+
+  geojson = new VectorLayer({
+    source:new VectorSource({
+      url:url,
+      format:new GeoJSON()
+    }),
+    style:style
+  })
+
+  geojson.getSource().on("addfeature", function(){
+    map.getView().fit(
+      geojson.getSource().getExtent(),
+      {
+        duration:1590, size:map.getSize(), maxZoom:21
+      }
+    )
+  })
+  map.addLayer(geojson);
+}
+
+//Attribute table on the map
+var featureOverlay;
+
+function newpopulateQueryTable(url){
+  if(typeof attributePanel !== "undefined"){
+    if(attributePanel.parentElement !== null){
+      attributePanel.close();
+    }
+  }
+  $.getJSON(url, function(data){//jquery functionality
+    var col = [];
+    col.push('id');
+    for(var i= 0; i < data.features.length; i++){
+      for(var key in data.features[i].properties){
+        if(col.indexOf(key) === -1){
+          col.push(key);
+        }
+      }
+    }
+
+    var table = document.createElement("table");
+    table.setAttribute("class", "table table-bordered table-hover table-condensed");
+    //CREATE HTML TABLE HEADER ROW USING THE EXTRACTED HEADERS ABOVE 
+    var tr = table.insertRow(-1);//Table Row
+
+    for(var i = 0 ; i < col.length; i++){
+      var th = document.createElement("th"); //TABLE HEADER
+      th.innerHTML = col[i];
+      tr.appendChild(th);
+    }
+
+    //ADD JSON DATA TO THE TABLE AS ROWS
+    for (let i = 0; i < data.features.length; i++) {
+      tr = table.insertRow(-1);
+      for(var j = 0; j < col.length; j++){
+        var tabCell = tr.insertCell(-1);
+        if(j == 0){ tabCell.innerHTML =  data.features[i]['id'];}
+        else{
+          tabCell.innerHTML = data.features[i].properties[col[j]];
+        }
+      }
+      
+    }
+
+    //var tabDiv = document.createElement("div"); 
+    var tabDiv = document.getElementById("attListDiv");
+
+    var delTab = document.getElementById("attQryTable");
+    if(delTab){
+      tabDiv.removeChild(delTab);
+    }
+
+    tabDiv.appendChild(table);
+
+    document.getElementById("attListDiv").style.display = "block";
+    //html de bu elementi olusturduk ordan geliyor direk dom ile olusturmadik yani
+
+  })
+
+
+  
+   var highlightStyle = new Style({
+    fill : new Fill({
+      color:'rgba(255, 0 , 255, 0.3)',
+    }),
+    stroke : new Stroke({
+      color:'#FF00FF',
+      width: 3,
+    }),
+    image: new CircleStyle({
+      radius:10,
+      fill:new Fill({
+        color:'#FF00FF'
+      })
+    })
+   })
+
+   featureOverlay = new VectorLayer({
+    source: new VectorSource(),
+    map:map,
+    style:highlightStyle
+   });
+
+
+
+ 
+}
+
+ //   setTimeout(function(){ newaddRowHandlers(url);}, 300);//Burasi query-popup inda ki filtrelemeler yapildiktan sonra enter a basinca zoom-level artarak tiklanan alana zoom-in yapilmasi saglayan fonksiyondur
+
+ function newaddRowHandlers()
+ {
+    var table = document.getElementById("attQryTable");
+    var rows = document.getElementById("attQryTable")?.rows;
+    var heads = table?.getElementsByTagName("th");//id uzerinden table a erisince o table uzerinden de o table a ait tr- lere bu sekilde erisielbiliyor
+    var col_no;
+    for(var i=0; i < heads?.length; i++){
+      //Take each cell 
+      var head = heads[i];
+      if(head.innerHTML == "id"){
+        col_no = i + 1;
+      }
+    }
+
+    for(i = 0; i< rows.length; i++)
+    {
+        rows[i].onclick = function(){
+          featureOverlay.getSource().clear();
+          $(function(){
+            $("#attQryTable td").each(function(){
+              $(this).parent("tr").css("background-color", "white");
+            });
+          });
+
+          var cell = this.cells[col_no - 1];
+          var id = cell.innerHTML; 
+          $(document).ready(function(){
+            $("#attQryTable td:nth-child("+ col_no + ")").each(function(){
+                if($(this).text() == id){
+                  $(this).parent("tr").css("background-color", "#d1d8e2");
+                }
+            });
+          });
+
+          var features = geojson.getSource().getFeatures();
+
+          for(i = 0; i < features.length; i++){
+            if(features[i].getId() == id){
+              featureOverlay.getSource().addFeature(features[i]);
+
+              featureOverlay.getSource().on("addFeature", function(){
+                map.getView().fit(
+                  featureOverlay.getSource().getExtent(), 
+                  {duration: 1500, size:map.getSize(), maxZoom:24}
+                );
+
+              });
+            }
+          }
+          
+        }
+    }(rows[i]);
+ }

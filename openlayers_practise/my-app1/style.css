@@ -252,7 +252,8 @@ ol.popup-closer:after {
   position: absolute;
 
   display: block;
-  margin: 160px auto auto 225px;
+  display: none;
+  margin: 80px auto auto 225px;
   /* padding: 10px;*/
   width: 250px;
   /*height:250px;*/
@@ -313,4 +314,49 @@ ol.popup-closer:after {
   height:35px;
   width:50px;
   margin:10px;
+}
+
+.attListDiv {
+  position: absolute;
+  display: none;
+  margin:590px auto auto 350px;
+  /* padding: 10px; */
+  width: auto;
+  max-width: 750px; 
+  /* height: auto;*/
+  /* max-height: 250px;*/
+  height: 250px;
+  background-color: rgba(255, 255, 255,0.9);
+  font-family:inherit;
+  font-size:1em;
+  line-height: 1.45;
+  border-radius: 2px;
+  border:1px solid #d1d1d1;
+  box-shadow: 2px 3px 2px rgba(0,0,0,0.5);
+  /* z-index:5; */
+  overflow:scroll;
+}
+
+#attQryTable {
+padding:0;
+border-collapse:collapse;
+}
+
+#attQryTable, td, th {
+padding: 0px 5px 0px 5px;
+border: 1px solid black;
+}
+
+#attQryTable, th {
+  color: white;
+  background-color: midnightblue;
+  position: sticky;
+  top: 0;
+  font-style: normal;
+  padding: 5px 10px 5px 10px;
+}
+
+#attQryTable tr:hover {
+  /* {font-weight:bolder; background-color:rgb(225, 225, 225)} */
+  background-color: lightgrey;
 }
