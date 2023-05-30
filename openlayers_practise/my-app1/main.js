@@ -81,7 +81,9 @@ let IndiaAdm1StateTile = new TileLayer({
 url:"http://localhost:9090/geoserver/geo-demo/wms?",
 //url ile geoserver dan fetch edecegiz data kaynagini
 //geoserver da layerpreview dan hazirladigmz layer lardan indiastateboundary4 u openlayers da tiklayarak acariz ve o map i goruntuleriz ve o acilan adres cubugundaki url in wms e olan kismini kopyalariz
-params:{"LAYERS":"geo-demo:ind_adm1_pg","TILED":true},
+params:{
+  
+  "LAYERS":"geo-demo:ind_adm12_pg","TILED":true},
 //hangi geoserver da hangi layer i kullanacagmiz i belli etmek icin params kullaniyoruz. params a biz geoserver da previewlayer yaptiktan sonra gelen sayfadaki Name olarak hangisni kullaniyorsak onu yaziyourz
 //geoserver in wms server ini kullaniyoruz, consume ediyoruz
 serverType:"geoserver",
@@ -89,6 +91,7 @@ serverType:"geoserver",
 visible:true
   })
 });
+
 
 //polbnda_ind_pg4
 let IndiaPolbnda_Ind_Pg4Tile = new TileLayer({
@@ -113,7 +116,7 @@ let overlayLayerGroup = new LayerGroup({
  // fold:true,
   fold:"open",
   layers:[
-     IndiaAdm1StateTile  , //IndiaPolbnda_Ind_Pg4Tile 
+    IndiaPolbnda_Ind_Pg4Tile  ,IndiaAdm1StateTile  
   ]
 });
 
@@ -884,5 +887,67 @@ zoButton.addEventListener("click", ()=>{
 
 map.addControl(zoControl);
 
-//HOW TO ADD ATTRIBUTE QUERY - BIR LINKE TIKLANILDIGI ZAMAN QUERY ISLEMI YAPAN KUTU ACILACAK VE ICERSINDEN SECENEKLER SECILIP MAP UZERINDE VERITABANINDAN QUERY CALISTIRACAK
+//HOW TO ADD ATTRIBUTE QUERY - 
+//BIR LINKE TIKLANILDIGI ZAMAN QUERY ISLEMI YAPAN KUTU ACILACAK VE ICERSINDEN SECENEKLER SECILIP MAP UZERINDE VERITABANINDAN QUERY CALISTIRACAK
 //query dialob box u gosterebilmek icn html icerisine component ekleyecegiz
+//Select Layer- once layer secilecek.. yani geoserver da yayinlanmis wms-layer lar arasindan layer secilecek  
+//Sonra o secilen layer ornegin india_adm1_pg yi sectik bu secilen wms-layer nedir postgres-postgis den tablo olarak gelen bir tablodur ve o tablonun kolonlari ise attribute dur ... Bu attribute icerisinden bir attribute secilecek Select Attribute diyerek 
+//Sonra Select operator LIKE-EQUAL TO DIYEREK BIRI SECILIR 
+//Ardindan da Enter Value diyerek bir input dan kullanicdan deger alinir ve bu deger kullanilark, query olusturulur ve o gelen query harita uzerinde farkli style ile stillendirilerek kullaniciya secilen query-filtreleme harita uzerinde vektor data olarak sunulmus olur hem de kullanici karsisina ayrica bir dikdortgen popup ile tum datalar gosterilecek ve de popup uzerindeki data lardan birine tiklaninca o direk harita uzerinde o data hangi alana karsilik geliyorsa ona zoom-in yapip(highlighted olacak) farkli style ile stillendirilecek
+//Ve butun bu islemler icin biz sol da bir query iconu koyacagiz query iconuna bir kez tiklayinca bu ozellikler kullanilabilecek, 2.kez tikladgimizda ise bu ozellklerin tamami kaybolacak, yani toggle mantiginda yapacagiz
+
+
+
+
+var queryButton = document.createElement("button");
+queryButton.innerHTML= `<img src='resources/images/database.png' alt='' style='width:30px; height:30px; cursor:pointer;
+background-color:cyan;    vertical-align:middle; margin-left:14px;'></img>  `;
+queryButton.className = "myButton";
+queryButton.id="queryButton";
+
+var queryElement = document.createElement("div");
+
+queryElement.className = "queryButtonDiv";
+queryElement.appendChild(queryButton);
+
+var queryControl = new Control({
+  element:queryElement
+});
+
+var queryFlag = false;
+
+queryButton.addEventListener("click", ()=>{
+  queryButton.classList.toggle("clicked");
+  queryFlag = !queryFlag;
+  if(queryFlag){
+    
+    document.querySelector(".attQueryDiv").style.display = "block";
+  }else{
+    
+    document.querySelector(".attQueryDiv").style.display = "none";
+   
+  }
+})
+
+map.addControl(queryControl);
+
+let selectLayer = document.querySelector("#selectLayer");
+let selectHTML = ``; 
+
+
+map.getAllLayers().forEach(layer=>{
+  if(layer.get("title")){
+    selectHTML +=`<option `;
+     selectHTML+=   layer.get("title") == 'None' ? 'disabled' : '';
+     selectHTML+=  `>`;
+    selectHTML+= layer.get("title")
+    selectHTML +=`   </option>`;
+  }
+})
+    
+
+
+
+selectLayer.innerHTML = selectHTML;
+
+console.log(map.getAllLayers())
