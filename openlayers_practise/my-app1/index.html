@@ -8,6 +8,7 @@
     <title>Using OpenLayers with Vite</title>
   </head>
   <body>
+    <div class="container">
     <div id="map"></div>
 
     <div id="popup" class="ol-popup">
@@ -43,30 +44,33 @@
 
     <!-- query-dialog - box  -->
 
-    <select class="attQueryDiv" id="attQueryDiv">
-<div class="headerDiv" id="headerDiv">
-  <label for="">Attribute Query</label>
-</div><br>
-<label for="">Select User</label>
-<select name="selectLayer" id="selectLayer"></select><br><br>
+    <div class="attQueryDiv" id="attQueryDiv">
+      <div class="headerDiv" id="headerDiv">
+        <label for="">Attribute Query</label>
+      </div><br>
 
-<label for="">Select Attribute</label>
-<select name="selectAttribute" id="selectAttribute"></select> <br><br>
+      <label for="">Select Layer</label>
+      <select name="selectLayer" id="selectLayer">
+        
+      </select><br><br>
 
-<label for="">Select Operator</label>
-<select name="selectOperator" id="selectOperator"></select><br><br>
+      <label for="">Select Attribute</label>
+      <select name="selectAttribute" id="selectAttribute"></select> <br><br>
 
-<label for="">Enter Value</label>
-<input type="text" name="enterValue" id="enterValue">
+      <label for="">Select Operator</label>
+      <select name="selectOperator" id="selectOperator"></select><br><br>
 
-<br><br>
+      <label for="">Enter Value</label>
+      <input type="text" style="font-size:1.3rem;" name="enterValue" id="enterValue">
 
-<button type="button" id="attQryRun" class="attQryRun" >Run</button>
+      <br><br>
+
+      <button type="button"  id="attQryRun" class="attQryRun" onclick="attributeQuery()" >Run</button>
 
     </div>
 
 
-
+  </div>
 
     <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
     <script type="module" src="./main.js"></script>
