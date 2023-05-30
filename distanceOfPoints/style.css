@@ -3,10 +3,33 @@
 html, body {
   margin: 0;
   height: 100%;
+  
+}
+
+#main {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
 }
 #map {
   position: absolute;
   top: 0;
   bottom: 0;
-  width: 100%;
+  width: 95%;
+}
+
+#circle {
+  position:absolute;
+  right: 0rem;
+  top: 4rem;
+  padding: .6rem 1.6rem;
+  background-color: aqua;
+  border: none;
+  border-radius: .3rem;
+  font-size: 1.3rem;
+  cursor: pointer;
+}
+
+#circle:hover {
+  background-color: greenyellow;
 }

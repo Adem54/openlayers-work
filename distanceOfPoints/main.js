@@ -31,6 +31,8 @@ import {transform} from 'ol/proj';
 import {getPointResolution} from 'ol/proj';
 import {get} from 'ol/proj';
 
+import {Snap} from 'ol/interaction.js';
+
 const source = new VectorSource();
 
 let view = new View({
@@ -100,7 +102,10 @@ let pointCoords2 =[1525055.1330004458, 6185855.128569698];
 let pointCoords3 =[443929.80493491306, 5957155.539940451];
 let pointCoords4 = [744785.9482653667, 6952671.396326587];
 let skienCoords = [1070451.7899100096, 8223685.720259543];
-
+skienCoords = [
+  834067.7818246784,
+  8203002.551990387
+];//Brokke
 
 const skienpointFeature = new Feature({
   geometry: new Point(skienCoords),
@@ -350,7 +355,7 @@ modify.on("modifyend", function(event){
     let coords1 = [1070451.7899100096, 8223685.720259543];
     let coords2 = feature.getGeometry().getFlatCoordinates();
 
-    let result3 = toLonLat(coords1,"EPSG:3857");
+    let result3 = toLonLat(skienCoords,"EPSG:3857");
     let result4 = toLonLat(coords2 ,  "EPSG:3857");
      getDistance3 = getDistance(result3, result4).toFixed(2); 
   
@@ -380,18 +385,18 @@ modify.on("modifystart", function(event){
   console.log("MODIFY-START");
 })
 
-modify.on("change",function(event){
-  console.log("CHANGE:");
+// modify.on("change",function(event){
+//   console.log("CHANGE:");
 
-})
+// })
 
-//Tikladigmiz
+// //Tikladigmiz
 
-map.on("pointermove", function(event){
-  console.log(event.coordinate)
- // map.addInteraction(modify);
+// map.on("pointermove", function(event){
+//   console.log(event.coordinate)
+//  // map.addInteraction(modify);
 
-})
+// })
 
 
 
@@ -458,3 +463,4 @@ const kristiansand1 = new LatLon(58.1462, 7.9950);
 const distance2 = skien1.distanceTo(kristiansand1);
 
 console.log('Distance:', distance2, 'meters');
+
