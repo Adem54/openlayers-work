@@ -1023,7 +1023,7 @@ function addMapLayerList(){
           $(this).find("Name").each(function(){
           
             var value = $(this).text();
-            console.log("value::::::", $(this).text());
+        //    console.log("value::::::", $(this).text());
             select.append("<option class='ddindent' value='" + value +"' >"+ value+"</option>");
           })
         })
@@ -1076,9 +1076,9 @@ $(function(){
           select.append("<option class='ddindent' value=''></option>");
         console.log("xml--xmll",$(xml))
           $(xml).find('xsd\\:sequence').each(function(){
-            console.log("$this11...: ", $(this))
+         //   console.log("$this11...: ", $(this))
             $(this).find('xsd\\:element').each(function(){
-              console.log("$this22...: ", $(this))
+          //    console.log("$this22...: ", $(this))
               var value = $(this).attr('name');
               
               //alert(value)
@@ -1128,6 +1128,9 @@ document.getElementById("selectAttribute").onchange =  function(){
 //BURDA Y INE HARIKA BIR BESTPRACITSE...VAR ... WFS-GETFEATURES - CQL_FILTER ILE WFS- IN GETFEATURES ENDPOINTINE FILTRELEME YAPARAK REQUEST GONDREIYUORUZ....BUNU PRATIGE DOKUYORUZ ISTE BURDA...HARIKA BESTPRACTISE...
 //FILTRELEME POPUP INDA FILTRELEME SECITGIMZ ZAMAN URL BU SEKILDE GELIYOR...
 //http://localhost:9090/geoserver/geo-demo/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=geo-demo:ind_adm12_pg&CQL_FILTER=id_1+%3E+%2715%27&outputFormat=application/json
+
+
+console.log("ATTQRYRUN: ", document.getElementById("attQryRun"))//ATTQRYRUN:  <button type=​"button" id=​"attQryRun" class=​"attQryRun">​Run​</button>​ RUN BUTONUNA TIKLAYINCA YANI QUERY FORM U DOLDURULUP BUTONA BASILINCA TETIKLENEN FONKSIYONDUR.. HEMEN ALTTAKI 
 document.getElementById("attQryRun").onclick =  function (){
   map.set("isLoading", "YES");
 
@@ -1176,8 +1179,11 @@ document.getElementById("attQryRun").onclick =  function (){
 });//Burasi 1059 a ait..ama burasisinin bitimi bir en altta da olabilir ben simdilik buraya koydum ama bunu bir arastiralim...
 
 
-//Geoserver dan datayi fetch edecek
+//Geoserver dan datayi fetch edecek--WFS-GETFEAUTURE -CQL_FILTER - url ini openlayers da layer olarak kullanmak!!!BESTPRACTISE....
+//url-http://localhost:9090/geoserver/geo-demo/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=geo-demo:ind_adm12_pg&CQL_FILTER=id_1+>+'15'&outputFormat=application/json
+//url- wfs getFeatures filter- islemini json olarak donduren bir url dir, bu url i browser da request edersek, json sonucunu goruruz biz bu sekilde url i alarak bunu openlayers da bir vektorlayer icinde vektorsource icinde url option una value olarak kullanarak geojson layer i elde edebiliriz....
 function newaddGeoJsonToMap(url){
+  console.log("url-GEOJSON: ", url);
   if(geojson){
     geojson.getSource().clear();
     map.removeLayer(geojson);
@@ -1208,13 +1214,15 @@ function newaddGeoJsonToMap(url){
     style:style
   })
 
+  //BESTPRACTISE....
   geojson.getSource().on("addfeature", function(){
+  //Bu islem.. geojson layer i icerisine request ile gelen wfs-getFeature dan gelen url nin kullanilmasi ile elde ediliyor dolayisi ile her response geldiginde tetikleniyor bu method ve de bizde response geldgiinde sen view i bu sekilde zoom-level i animasyonlu bir sekilde, yeni gelen sourceye gore extend et demis olyoruz ve bu sayede de kullanici filtreleme kriterleri layer, attribute, operation i secip de input alanina filtreleme degerini girip de enter a basinca verilen input degerinden ornegin daha buyuk id ler gelsin demis isek mesela eger bizim filtrelememiz sonucunda datalar var ise, filtrelemeye karsilik gelen o zaman o datalar, map de hangi alanlara karsilik geliyor ise o datalar, style olarak highlighted yapilarak o alanlara da animasyonlu bir sekilde zoom y apilacak...
     map.getView().fit(
       geojson.getSource().getExtent(),
       {
         duration:1590, size:map.getSize(), maxZoom:21
       }
-    )
+    ) 
   })
   map.addLayer(geojson);
 }
@@ -1222,13 +1230,30 @@ function newaddGeoJsonToMap(url){
 //Attribute table on the map
 var featureOverlay;
 
+//url: http://localhost:9090/geoserver/geo-demo/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=geo-demo:ind_adm12_pg&CQL_FILTER=id_1+>+'15'&outputFormat=application/json
+//GEOSERVER- WFS- GETFEATURES - CQL_FILTERS URL INI ASAGIDAKI GIBI OPENLAYERS DA KULLANARAK FEATURES LARA ERISEREK ONLARI LISTELEYEBILIRZ..
 function newpopulateQueryTable(url){
+  console.log("newpopulateQueryTable-URL: ", url)
   if(typeof attributePanel !== "undefined"){
     if(attributePanel.parentElement !== null){
       attributePanel.close();
     }
   }
+  //Kullnici filtrelemeyi secip input alanina filtreleme icin kullanilacak degeri girip enter yapinca bu url ortaya cikiyor ve bu url i asagdiaki $.getJSON() ile parametreye url vererek data ya erisebiliyoruz...HARIKA BESTPRACTISE....
+  //url: http://localhost:9090/geoserver/geo-demo/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=geo-demo:ind_adm12_pg&CQL_FILTER=id_1+>+'15'&outputFormat=application/json
   $.getJSON(url, function(data){//jquery functionality
+    console.log("newpopulateQueryTable-data: ", data);//newpopulateQueryTable-data:  {type: 'FeatureCollection', features: Array(22), totalFeatures: 22, numberMatched: 22, numberReturned: 22, …}
+    console.log("newpopulateQueryTable-data: ", data.features);
+    /* 
+    newpopulateQueryTable-data:  
+(22) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+0
+: 
+{type: 'Feature', id: 'ind_adm12_pg.16', geometry: {…}, geometry_name: 'geom', properties: {…}}
+1
+: 
+{type: 'Feature', id: 'ind_adm12_pg.17', geometry: {…}, geometry_name: 'geom', properties: {…}}
+    */
     var col = [];
     col.push('id');
     for(var i= 0; i < data.features.length; i++){
@@ -1241,6 +1266,8 @@ function newpopulateQueryTable(url){
 
     var table = document.createElement("table");
     table.setAttribute("class", "table table-bordered table-hover table-condensed");
+    table.setAttribute("id","attQryTable");
+    console.log("table-IN-NEWPOPULATE-QUERY-TABLE _ ", table)
     //CREATE HTML TABLE HEADER ROW USING THE EXTRACTED HEADERS ABOVE 
     var tr = table.insertRow(-1);//Table Row
 
@@ -1263,13 +1290,20 @@ function newpopulateQueryTable(url){
       
     }
 
+
+    console.log("table-IN-NEWPOPULATE-QUERY-TABLEEEEEE ", table)
     //var tabDiv = document.createElement("div"); 
     var tabDiv = document.getElementById("attListDiv");
 
     var delTab = document.getElementById("attQryTable");
+     delTab = document.querySelector("#attQryTable");
+    delTab = table;
+    console.log("delTab-first_ ",delTab);
     if(delTab){
       tabDiv.removeChild(delTab);
     }
+    console.log("delTab-last_ ",delTab);
+
 
     tabDiv.appendChild(table);
 
@@ -1312,6 +1346,7 @@ function newpopulateQueryTable(url){
  function newaddRowHandlers()
  {
     var table = document.getElementById("attQryTable");
+    console.log("tableeeee: ",table);
     var rows = document.getElementById("attQryTable")?.rows;
     var heads = table?.getElementsByTagName("th");//id uzerinden table a erisince o table uzerinden de o table a ait tr- lere bu sekilde erisielbiliyor
     var col_no;
@@ -1322,9 +1357,10 @@ function newpopulateQueryTable(url){
         col_no = i + 1;
       }
     }
-
+    console.log("rows: ",rows)
     for(i = 0; i< rows.length; i++)
     {
+      console.log("rows[i]: ",rows[i])
         rows[i].onclick = function(){
           featureOverlay.getSource().clear();
           $(function(){
@@ -1344,12 +1380,14 @@ function newpopulateQueryTable(url){
           });
 
           var features = geojson.getSource().getFeatures();
+          console.log("features__________: ",features)
 
           for(i = 0; i < features.length; i++){
             if(features[i].getId() == id){
               featureOverlay.getSource().addFeature(features[i]);
 
               featureOverlay.getSource().on("addFeature", function(){
+                console.log("featureOverlay--addFeature triggered!!!!")
                 map.getView().fit(
                   featureOverlay.getSource().getExtent(), 
                   {duration: 1500, size:map.getSize(), maxZoom:24}
