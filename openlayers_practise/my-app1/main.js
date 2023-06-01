@@ -989,7 +989,7 @@ console.log(map.getAllLayers())
 
 selectLayer.addEventListener("change", function(event){
   console.log("selected-option-value: ", event.target.value);//selectedOption value
-  console.log("selected-options: ", event.target.options);//selectedOption value
+  console.log("selected-options: ", event.target.options);//TUM OPTIONS LAR I VERIYOR
   console.log("selected-option-index: ", event.target.selectedIndex);//selectedOption value//2
   console.log("selected-option: ", event.target.options[event.target.selectedIndex]);//
 
@@ -1170,8 +1170,14 @@ document.getElementById("attQryRun").onclick =  function (){
 
    console.log("ENTER---URL: ", url);
    newaddGeoJsonToMap(url);
-   newpopulateQueryTable(url);
-   setTimeout(function(){ newaddRowHandlers(url);}, 300);//Burasi query-popup inda ki filtrelemeler yapildiktan sonra enter a basinca zoom-level artarak tiklanan alana zoom-in yapilmasi saglayan fonksiyondur
+  
+   setTimeout( function(
+
+   ){
+    newpopulateQueryTable(url, newaddRowHandlers);
+    
+ 
+  }, 300);//Burasi query-popup inda ki filtrelemeler yapildiktan sonra enter a basinca zoom-level artarak tiklanan alana zoom-in yapilmasi saglayan fonksiyondur
    map.set("isLoading", "NO");
   }
 }
@@ -1232,7 +1238,8 @@ var featureOverlay;
 
 //url: http://localhost:9090/geoserver/geo-demo/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=geo-demo:ind_adm12_pg&CQL_FILTER=id_1+>+'15'&outputFormat=application/json
 //GEOSERVER- WFS- GETFEATURES - CQL_FILTERS URL INI ASAGIDAKI GIBI OPENLAYERS DA KULLANARAK FEATURES LARA ERISEREK ONLARI LISTELEYEBILIRZ..
-function newpopulateQueryTable(url){
+var table ;
+function newpopulateQueryTable(url, callback){
   console.log("newpopulateQueryTable-URL: ", url)
   if(typeof attributePanel !== "undefined"){
     if(attributePanel.parentElement !== null){
@@ -1264,10 +1271,12 @@ function newpopulateQueryTable(url){
       }
     }
 
-    var table = document.createElement("table");
+     table = document.createElement("table");
     table.setAttribute("class", "table table-bordered table-hover table-condensed");
     table.setAttribute("id","attQryTable");
+    document.body.appendChild(table);
     console.log("table-IN-NEWPOPULATE-QUERY-TABLE _ ", table)
+    callback();
     //CREATE HTML TABLE HEADER ROW USING THE EXTRACTED HEADERS ABOVE 
     var tr = table.insertRow(-1);//Table Row
 
@@ -1294,13 +1303,15 @@ function newpopulateQueryTable(url){
     console.log("table-IN-NEWPOPULATE-QUERY-TABLEEEEEE ", table)
     //var tabDiv = document.createElement("div"); 
     var tabDiv = document.getElementById("attListDiv");
+    console.log("tabDiv- ",tabDiv);//tabDiv geliyor , tabDiv de sorun yok
+
 
     var delTab = document.getElementById("attQryTable");
-     delTab = document.querySelector("#attQryTable");
-    delTab = table;
+     delTab = document.querySelector("#attQryTable");//delTab null geliyor
+     tabDiv.appendChild(delTab);
     console.log("delTab-first_ ",delTab);
     if(delTab){
-      tabDiv.removeChild(delTab);
+      tabDiv.removeChild(delTab);//BURDA DA HATA VERIYOR
     }
     console.log("delTab-last_ ",delTab);
 
@@ -1330,6 +1341,7 @@ function newpopulateQueryTable(url){
     })
    })
 
+   //Bu ara da featureOverlay bir layerdir Overlay degildir isimlendirme de hata yapilmis....
    featureOverlay = new VectorLayer({
     source: new VectorSource(),
     map:map,
@@ -1337,6 +1349,7 @@ function newpopulateQueryTable(url){
    });
 
 
+   
 
  
 }
@@ -1345,9 +1358,10 @@ function newpopulateQueryTable(url){
 
  function newaddRowHandlers()
  {
+  console.log("geojson::::: ",geojson)
     var table = document.getElementById("attQryTable");
-    console.log("tableeeee: ",table);
-    var rows = document.getElementById("attQryTable")?.rows;
+    console.log("tableeeee: ",table);//PROBLEM -1 BURASI BOS GELIYOR...NULLLL
+    var rows = document.getElementById("attQryTable").rows;//BURASI UNDEFINED GELIYOR..
     var heads = table?.getElementsByTagName("th");//id uzerinden table a erisince o table uzerinden de o table a ait tr- lere bu sekilde erisielbiliyor
     var col_no;
     for(var i=0; i < heads?.length; i++){
@@ -1378,13 +1392,18 @@ function newpopulateQueryTable(url){
                 }
             });
           });
-
+          console.log("geojson2::::: ",geojson)
           var features = geojson.getSource().getFeatures();
           console.log("features__________: ",features)
 
           for(i = 0; i < features.length; i++){
             if(features[i].getId() == id){
+              //Bu ara da featureOverlay bir layerdir Overlay degildir isimlendirme de hata yapilmis....
               featureOverlay.getSource().addFeature(features[i]);
+              console.log("featureOverlay: ",featureOverlay)
+              featureOverlay.getSource().getFeatures().forEach(feature=>{
+                console.log("FEATUREEEEEE: ", feature);
+              })
 
               featureOverlay.getSource().on("addFeature", function(){
                 console.log("featureOverlay--addFeature triggered!!!!")
