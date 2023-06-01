@@ -897,7 +897,7 @@ map.addControl(zoControl);
 //Ardindan da Enter Value diyerek bir input dan kullanicdan deger alinir ve bu deger kullanilark, query olusturulur ve o gelen query harita uzerinde farkli style ile stillendirilerek kullaniciya secilen query-filtreleme harita uzerinde vektor data olarak sunulmus olur hem de kullanici karsisina ayrica bir dikdortgen popup ile tum datalar gosterilecek ve de popup uzerindeki data lardan birine tiklaninca o direk harita uzerinde o data hangi alana karsilik geliyorsa ona zoom-in yapip(highlighted olacak) farkli style ile stillendirilecek
 //Ve butun bu islemler icin biz sol da bir query iconu koyacagiz query iconuna bir kez tiklayinca bu ozellikler kullanilabilecek, 2.kez tikladgimizda ise bu ozellklerin tamami kaybolacak, yani toggle mantiginda yapacagiz
 
-
+//attribute-query-start
 
 var geojson ;
 var featureOverlay ;
@@ -1035,12 +1035,6 @@ function addMapLayerList(){
 //BEST PRACTISE.. XML ADRES-URL INE BIZ REQUEST GONDEREREK ICERISINDEKI DATALARA ERISEBILIYORUZ... YANI DAHA DOGRUSU GETCAPABILITES XML E BIZ REQUEST GONDEREBILIYORUZ VE ICERISINDE VAR OLAN LAYER S LARI ALARAK O HER BIR LAYER IN DA FEATURE LARINA ERISEBILECEK, REQUEST LER GONDEREBILIYORUZ....
 
 
-
-
-
-
-//end-attribute query
-
 //http://localhost:9090/geoserver/wfs?request=getCapabilities
 
 //http://localhost:9090/geoserver/wfs?request=getCapabilities
@@ -1053,7 +1047,7 @@ function addMapLayerList(){
 //http://localhost:9090/geoserver/geo-demo/ows?service=WFS&version=1.0.0&request=getCapabilities
 //TUM GEOSERVER DAKI LAYER LARA ERISMEK ICIN DE ... //http://localhost:9090/geoserver/wfs?request=getCapabilities
 //Ozellikle biz WFS geoserver islemlerinde openlayers uzerinden hep ajax-request ler gondererek o datalara erisip datalari listeley biliriz ayni zamanda da o datalari edit leyebiliriz.. 
-
+//Wfs-DescribeFeatureType ile secilen layer in yani secilen wms-layer in(geoserverdan getcapabilites ile erisilen layerlardan) attributes lerini ajax ile cekiyoruz.. 
 
 //Secilen layer a ait attributes lere erismek icin geoserver daki wfs-request=DescribeFeatureType a request gonderili yor...(endopointine)
 $(function(){
@@ -1128,7 +1122,7 @@ document.getElementById("selectAttribute").onchange =  function(){
 //BURDA Y INE HARIKA BIR BESTPRACITSE...VAR ... WFS-GETFEATURES - CQL_FILTER ILE WFS- IN GETFEATURES ENDPOINTINE FILTRELEME YAPARAK REQUEST GONDREIYUORUZ....BUNU PRATIGE DOKUYORUZ ISTE BURDA...HARIKA BESTPRACTISE...
 //FILTRELEME POPUP INDA FILTRELEME SECITGIMZ ZAMAN URL BU SEKILDE GELIYOR...
 //http://localhost:9090/geoserver/geo-demo/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=geo-demo:ind_adm12_pg&CQL_FILTER=id_1+%3E+%2715%27&outputFormat=application/json
-
+//Wfs-GetFeatures-CQL_FILTER ile filtreleme yaparak secilen attribute icin belirlenen fitlrelemeyi url e dinamik olarak alip, filtreleme yi bu sefer artik son data geliyor..direk datayi cekiyoruz..xml url i uzerinden iste bunu isse ajax ile almiyoruz...openlaeyrs in geojson datalarini almak icin kullandigmiz ozelligii ile aliyoruz
 
 console.log("ATTQRYRUN: ", document.getElementById("attQryRun"))//ATTQRYRUN:  <button type=​"button" id=​"attQryRun" class=​"attQryRun">​Run​</button>​ RUN BUTONUNA TIKLAYINCA YANI QUERY FORM U DOLDURULUP BUTONA BASILINCA TETIKLENEN FONKSIYONDUR.. HEMEN ALTTAKI 
 document.getElementById("attQryRun").onclick =  function (){
@@ -1187,7 +1181,7 @@ document.getElementById("attQryRun").onclick =  function (){
 
 //Geoserver dan datayi fetch edecek--WFS-GETFEAUTURE -CQL_FILTER - url ini openlayers da layer olarak kullanmak!!!BESTPRACTISE....
 //url-http://localhost:9090/geoserver/geo-demo/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=geo-demo:ind_adm12_pg&CQL_FILTER=id_1+>+'15'&outputFormat=application/json
-//url- wfs getFeatures filter- islemini json olarak donduren bir url dir, bu url i browser da request edersek, json sonucunu goruruz biz bu sekilde url i alarak bunu openlayers da bir vektorlayer icinde vektorsource icinde url option una value olarak kullanarak geojson layer i elde edebiliriz....
+//url- wfs getFeatures filter- islemini json olarak donduren bir url dir, bu url i browser da request edersek, json sonucunu goruruz biz bu sekilde url i alarak bunu openlayers da bir vektorlayer icinde vektorsource icinde url option una value olarak kullanarak geojson layer i elde edebiliriz....BURDA AJAX-GET-REQUEST ILE JSON OLARAK DONECEK OLAN DATAYA REQUEST GONDERIYORUZU...JQUERY GET METHODU ILE
 function newaddGeoJsonToMap(url){
   console.log("url-GEOJSON: ", url);
   if(geojson){
@@ -1212,6 +1206,8 @@ function newaddGeoJsonToMap(url){
     })
   })
 
+  //OPENLAYER ARACILIGI ILE FILTRERLENEREK AJAX ILE WFS-GETFEATURES URL ININ DIREK VECTORSOURCE DE URL OLARAK KULLANARAK DA CEKEBILIUYORUZ DATAYI... DIKKKAT EDELIM. AMA URL-IN GEOJSON-YANI JSON FORMATINDA OLMASI GEREKIR, VE BU FILTRELENEN ALAN UZERINDE
+  //BESTPRACTISE...COOOK ONEMLI...
   geojson = new VectorLayer({
     source:new VectorSource({
       url:url,
@@ -1220,7 +1216,7 @@ function newaddGeoJsonToMap(url){
     style:style
   })
 
-  //BESTPRACTISE....
+  //BESTPRACTISE....BIR LAYER A UZAKTAN BIR DATA CEKILDIGI ZAMAN BU ORNEKTE OLDUGU GIBI, DATA NIN GELMESI BIRAZ ZAMAN ALACAK, FEATURE LAR GELINCE DE ZOOM- LEVEL GELEN DATAYI HARITA UZERINDE TAM GOSTERMESI ICIN..ZOOM-LEVEL VS DE AYARLANIYOR TEKRARDAN...
   geojson.getSource().on("addfeature", function(){
   //Bu islem.. geojson layer i icerisine request ile gelen wfs-getFeature dan gelen url nin kullanilmasi ile elde ediliyor dolayisi ile her response geldiginde tetikleniyor bu method ve de bizde response geldgiinde sen view i bu sekilde zoom-level i animasyonlu bir sekilde, yeni gelen sourceye gore extend et demis olyoruz ve bu sayede de kullanici filtreleme kriterleri layer, attribute, operation i secip de input alanina filtreleme degerini girip de enter a basinca verilen input degerinden ornegin daha buyuk id ler gelsin demis isek mesela eger bizim filtrelememiz sonucunda datalar var ise, filtrelemeye karsilik gelen o zaman o datalar, map de hangi alanlara karsilik geliyor ise o datalar, style olarak highlighted yapilarak o alanlara da animasyonlu bir sekilde zoom y apilacak...
     map.getView().fit(
@@ -1231,6 +1227,7 @@ function newaddGeoJsonToMap(url){
     ) 
   })
   map.addLayer(geojson);
+  console.log("geojson is addedd...")
 }
 
 //Attribute table on the map
@@ -1248,7 +1245,7 @@ function newpopulateQueryTable(url, callback){
   }
   //Kullnici filtrelemeyi secip input alanina filtreleme icin kullanilacak degeri girip enter yapinca bu url ortaya cikiyor ve bu url i asagdiaki $.getJSON() ile parametreye url vererek data ya erisebiliyoruz...HARIKA BESTPRACTISE....
   //url: http://localhost:9090/geoserver/geo-demo/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=geo-demo:ind_adm12_pg&CQL_FILTER=id_1+>+'15'&outputFormat=application/json
-  $.getJSON(url, function(data){//jquery functionality
+  $.getJSON(url, function(data){//jquery functionality-JQUERY-GETMETHOD KULLANILRAK WFS-GETFEATURES-CQL_FILTER ILE  HAZIRLANMIS URL-I(ENDPOINT GIBI DUSUNEBILIRZ)
     console.log("newpopulateQueryTable-data: ", data);//newpopulateQueryTable-data:  {type: 'FeatureCollection', features: Array(22), totalFeatures: 22, numberMatched: 22, numberReturned: 22, …}
     console.log("newpopulateQueryTable-data: ", data.features);
     /* 
@@ -1271,7 +1268,7 @@ function newpopulateQueryTable(url, callback){
       }
     }
 
-     table = document.createElement("table");
+    table = document.createElement("table");
     table.setAttribute("class", "table table-bordered table-hover table-condensed");
     table.setAttribute("id","attQryTable");
     document.body.appendChild(table);
@@ -1341,24 +1338,36 @@ function newpopulateQueryTable(url, callback){
     })
    })
 
+
+   var highlightStyle2 = new Style({
+    fill : new Fill({
+      color:'rgba(245, 227, 66, 0.3)',
+    }),
+    stroke : new Stroke({
+      color:'#f54287',
+      width: 3,
+    }),
+    image: new CircleStyle({
+      radius:10,
+      fill:new Fill({
+        color:'#f54245'
+      })
+    })
+   })
+
    //Bu ara da featureOverlay bir layerdir Overlay degildir isimlendirme de hata yapilmis....
    featureOverlay = new VectorLayer({
     source: new VectorSource(),
     map:map,
-    style:highlightStyle
+    style:highlightStyle2
    });
-
-
-   
-
- 
 }
 
  //   setTimeout(function(){ newaddRowHandlers(url);}, 300);//Burasi query-popup inda ki filtrelemeler yapildiktan sonra enter a basinca zoom-level artarak tiklanan alana zoom-in yapilmasi saglayan fonksiyondur
 
  function newaddRowHandlers()
  {
-  console.log("geojson::::: ",geojson)
+  console.log("geojson::::: ", geojson.getSource().getFeatures())
     var table = document.getElementById("attQryTable");
     console.log("tableeeee: ",table);//PROBLEM -1 BURASI BOS GELIYOR...NULLLL
     var rows = document.getElementById("attQryTable").rows;//BURASI UNDEFINED GELIYOR..
@@ -1394,6 +1403,7 @@ function newpopulateQueryTable(url, callback){
           });
           console.log("geojson2::::: ",geojson)
           var features = geojson.getSource().getFeatures();
+          //geojson ile url-geoserver-wfs-getFeatures-filter url i ile openlayers daki vectorLayer icinde vectorSource de url olarak kuallnarak olusturudgumuz layyer geojson di ve bu sayede su an kulllandigmz 2 tane farkli geoserver-wms imiz uzerindeki  harita da hangi alanlari filtrelersek o alanlar, i farkli bir style da veirrsek bize o alanlari gosteriyor  yani bize o alanlara ozel, bir layer olusturmus oluyor direk harita uzerinde gorebiiliyoruz ayni zaman da da  tabki gelen data yi da kullanabiliyoruz...data yi yukarda ajax ile alip table ile gosterirken ayni geoserver-wfs-getFeatures-filter i da harita uzerinde listeledgimz datay i da gosterebilmis oluyoruz...ARDINDAN DA GEOJSON LAYER ININ GETSOURCE UZERINDEN FEATURE LARINI ALIP YENI BIR LAYER OLUSTURARAK O LAYER A AKTARABILIRIZ VE ONA DA ID VS DE ATAYABILIRIZ VE FILTRELEYIP TABLE ICINDE POPUP OLARAK LISTELENEN DATA DAN HANGISINE TIKLANIRSA O NU HARITA UZERINDEN FARKLI BIR STYLE DA DA GOSTEREBILIRIZ...
           console.log("features__________: ",features)
 
           for(i = 0; i < features.length; i++){
@@ -1419,3 +1429,5 @@ function newpopulateQueryTable(url, callback){
         }
     }(rows[i]);
  }
+
+ //attribute-query-end
