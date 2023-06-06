@@ -68,6 +68,46 @@
 
     <div class="attListDiv" id="attListDiv"></div>
 
+
+    <div class="spQueryDiv" id="spQueryDiv">
+      <div class="headerDiv" id="headerDiv">
+        <label for="">Spatial Query</label>
+      </div>
+      <label for="">Select features of</label>
+      <select name="buffSelectLayer" id="buffSelectLayer"></select>
+      <!-- <br><br>-->
+    <label for="">that are</label>
+    <select name="qryType" id="qryType">
+      <option value="withinDistance">Within Distance of</option>
+      <option value="intersecting">Intersecting</option>
+      <option value="completelyWithin">Completely Within</option>
+    </select>
+    <!-- <br><br>-->
+    <div class="bufferDiv" id="bufferDiv">
+      <!-- <label for="">Distance if meter </label>  -->
+      <input type="number" name="bufferDistance" id="bufferDistance" placeholder="1000">
+      <select name="distanceUnits" id="distanceUnits">
+        <option value="meters">Meters</option>
+        <option value="kilometers">Kilometers</option>
+        <option value="feet">Feet</option>
+        <option value="nautical miles">Nautical Miles</option>
+      </select>
+      <label for="">from</label>
+    </div>
+
+    <select name="srcCriteria" id="srcCriteria">
+      <option value="pointMarker"> Point Marker</option>
+      <option value="lineMarker">Line Marker</option>
+      <option value="polygonMarker">Polygon Marker</option>
+    </select>
+
+    <button type="button" id="spUserInput" class="spUserInput"> <img src="resources/images/selection.png" alt=""
+      style="width: 17px; height: 17px; vertical-align: middle;"
+      > </button>
+      <button type="button" id="spQryRun" class="spQryRun">Run</button>
+      <button type="button" id="spQryClear" class="spQryClear">Clear</button>
+    </div>
+    
   </div>
 
     <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>

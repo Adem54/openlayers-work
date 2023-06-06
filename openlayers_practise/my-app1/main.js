@@ -54,7 +54,8 @@ let osmTile = new TileLayer({
   title:"Open Street Map",
   type:"base",
   visible:true,
-  source:new OSM()
+  source:new OSM(),
+
 });
 //map.addLayer(osmTile);
 
@@ -102,23 +103,53 @@ params:{"LAYERS":"geo-demo:polbnda_ind_pg","TILED":true},
 //hangi geoserver da hangi layer i kullanacagmiz i belli etmek icin params kullaniyoruz. params a biz geoserver da previewlayer yaptiktan sonra gelen sayfadaki Name olarak hangisni kullaniyorsak onu yaziyourz
 //geoserver in wms server ini kullaniyoruz, consume ediyoruz
 serverType:"geoserver",
-visible:true
+visible:true,
+
   })
 });
 
 // map.addLayer(IndiaPolbnda_Ind_Pg4Tile);
 // map.addLayer(IndiaAdm1StateTile);
 
+//geo-demo:india_cities
+
+let india_Cities = new TileLayer({
+  title:"India Cities",
+  source:new TileWMS({//WMS-geoserver dan gelen-Layer source for tile data from WMS servers.
+url:"http://localhost:9090/geoserver/geo-demo/wms?",
+//url ile geoserver dan fetch edecegiz data kaynagini
+//geoserver da layerpreview dan hazirladigmz layer lardan indiastateboundary4 u openlayers da tiklayarak acariz ve o map i goruntuleriz ve o acilan adres cubugundaki url in wms e olan kismini kopyalariz
+params:{"LAYERS":"geo-demo:india_cities","TILED":true},
+//hangi geoserver da hangi layer i kullanacagmiz i belli etmek icin params kullaniyoruz. params a biz geoserver da previewlayer yaptiktan sonra gelen sayfadaki Name olarak hangisni kullaniyorsak onu yaziyourz
+//geoserver in wms server ini kullaniyoruz, consume ediyoruz
+serverType:"geoserver",
+visible:true,
+
+
+  })
+});
+
+
+
 let overlayLayerGroup = new LayerGroup({
   title:"Overlays",
  // fold:true,
   fold:"open",
   layers:[
-    IndiaPolbnda_Ind_Pg4Tile , IndiaAdm1StateTile  , //
+    IndiaPolbnda_Ind_Pg4Tile , india_Cities ,IndiaAdm1StateTile    //
   ]
 });
 
 map.addLayer(overlayLayerGroup);
+
+map.getAllLayers().forEach(layer=>{
+  if(layer.get("title")){
+    console.log("TITLE: ",layer.get("title"))
+  }
+})
+
+
+
 
 //layer lardan hangisi en altta eklenirse o en uste gelecektir bunu bilelim yani su anda en ustte IndiaAdm1StateTile gozukecektir ve biz layerlarimiz arasidna priority da yapabiliyoruzo....
 //Geo server dan alacagimz datalarimiz WMS geoserver tile dir
@@ -561,10 +592,7 @@ function addInteractions(intType){
     })
   });
 
-
   map.addInteraction(draw);
-
-
 
 // map.addInteraction(new Draw({
 //   type:"LineString",
@@ -1430,4 +1458,254 @@ function newpopulateQueryTable(url, callback){
     }(rows[i]);
  }
 
+ //Ozellik olarak yapilan sudur..Once ku llanici layer secer sonra o layer icinden hangi attribute u filtreleme de kullancagini secer arindan ise sectigi attriubte e buyk-kucuk veya esit olacak sekilde filttrelme kriterini inputa girer ve submit yapar bunu yaptiginda filtrelenen alanlar once cok kisa bir zoom-in ile  yaklasarak, style stroke ile gosterilir ve de popup ile table icinde filtrelenen datalar liste halinde de gosterilir ayni zamanda, ve o popup listesi uzerinde herhangi bir data ya tiklanirsa da bu sefer direk tiklanan spesifk alana animasyonlu zoom-in yapilir ve tiklanan alan a bu sefer fill-ve stroke olarak yeni bir style verilir ki hangi alan secildigi belli olsun...BU MANTK HARIKA BESTPTRACTISE...BU ANIMASYONLU ZOOM-IN OLAYLARININ HEPSININ MANTIGINDA ADDFEATURE EVENTI KULLANILARAK Y APILIYOR BU HARIKA BIR BESTPRACTISE DIR BUNU ZAMANLA KULLANMAMIZ GEREKECEK COOOK ONEMLI 
  //attribute-query-end
+
+
+ //new functionality
+ //layer lar seciliyor ardindan distance giriyor ve ardindan da ne cizecegini seciyor ornegin point, sonra point cizgi herhangi bir noktaya ornegin distance olarak 100 km vermis ise 100 km ye kadar olan ne kadar point var ise onlarin hepsini farkli bir style da bize gosteriyor bu harika bir ozellik!!!!... 
+
+
+
+
+ var bufferButton = document.createElement("button");
+ bufferButton.innerHTML= `<img src='resources/images/mapSearch.png' alt='' style='width:30px; height:30px; cursor:pointer;
+background-color:cyan;    vertical-align:middle; margin-left:14px;'>
+<span>Spatial Query</span>
+</img>  `;
+bufferButton.className = "myButton";
+bufferButton.id="bufferButton";
+
+var bufferElement = document.createElement("div");
+
+bufferElement.className = "bufferButtonDiv";
+bufferElement.appendChild(bufferButton);
+
+var bufferControl = new Control({
+  element:bufferElement
+});
+
+var bufferFlag = false;
+
+bufferButton.addEventListener("click", ()=>{
+  console.log("bufferButton clicced")
+  bufferButton.classList.toggle("clicked");
+  bufferFlag = !bufferFlag;
+
+  document.getElementById("map").style.cursor = "default";
+
+  if(bufferFlag){
+    if(geojson){
+      geojson.getSource().clear();//source uzerinden clear yapiliyor... dikkat edelim... 
+      map.removeLayer(geojson);
+    }
+
+    if(featureOverlay){
+      featureOverlay.getSource().clear();
+      map.removeLayer(featureOverlay);
+    }
+
+    document.getElementById("map").style.cursor = "default";
+    document.getElementById("spQueryDiv").style.display = "block";
+
+    addMapLayerList_spQry();
+    
+  }else{
+    document.getElementById("map").style.cursor = "default";
+    document.getElementById("spQueryDiv").style.display = "none";
+    document.getElementById("attListDiv").style.display = "none";
+  }
+
+  if(geojson){
+    geojson.getSource().clear();//source uzerinden clear yapiliyor... dikkat edelim... 
+    map.removeLayer(geojson);
+  }
+
+  if(featureOverlay){
+    featureOverlay.getSource().clear();
+    map.removeLayer(featureOverlay);
+  }
+
+  map.removeInteraction(draw);
+  if(document.getElementById("spUserInput").classList.contains("clicked")) {document.getElementById("spUserInput").classList.toggle("clicked")}
+
+
+})
+
+map.addControl(bufferControl);
+
+//Bestpractise... Biz kullanmak istedgimiz layer lari bir array icerisine atip sonra tum geoserver daki layer lari getiren getCapabilities url inden ajax ile tum layer lari alinca sunu deriz eger bu array icindeki layer listesinde var ise option listesine yaz deriz.. 
+var layerList = ["geo-demo:ind_adm12_pg","geo-demo:polbnda_ind_pg", "geo-demo:india_cities"];
+/*valueeee: geo-demo:ind_adm12_pg
+main.js:1521 valueeee: geo-demo:ind_adm1_pg
+main.js:1521 valueeee: geo-demo:polbnda_ind_pg */
+
+function addMapLayerList_spQry(){
+  $(document).ready(function(){//html elementleri dom da hazir olunca burayi calistirsin demek.yuklenmesi hazir olunca calissin demektir ve 
+    //$(function(){  ile  $(document).ready(function(){ ayni dir sadece biris i kisaltilmis halidir..  
+      $.ajax({
+        type:"GET",
+       // url:"http://"+serverPort+ "/geoserver/wfs?request=getCapabilities",
+        url: "http://localhost:9090/geoserver/wfs?request=getCapabilities",
+        dataType:"xml",
+        success:function(xml){
+          var select = $("#buffSelectLayer");
+          select.append("<option class='ddindent' value=''></option>");//#buffSelectLayer id li select elementi child olarak option etiketini veriyor 
+          $(xml).find("FeatureType").each(function(){
+            $(this).find("Name").each(function(){
+              var value = $(this).text();
+              console.log("valueeee:", value);
+              if(layerList?.includes(value)){
+                select.append("<option class='ddindent' value='"+ value +"'>"+ value +"</option>")
+              }
+            })
+          })
+        }
+      })
+  })
+}
+
+$(function() {// $(document).ready(function(){ - bununla ayni seydir  $(function() {
+
+  var toc = document.getElementById("layerSwitcherContent");
+  layerSwitcher = new LayerSwitcher.renderPanel(map, toc, {reverse:true});
+
+  document.getElementById("selectLayer").onchange = function() {
+    var select = document.getElementById("selectAttribute");
+    while(select.options.length > 0){
+      select.remove(0);
+    }
+
+    var value_layer = $(this).val();
+    $(document).ready(function(){
+      $.ajax({
+        type:"GET",
+        url:"http://localhost:9090/geoserver/wfs?service=WFS&request=DescribeFeatureType&version=1.1.0&typeName="+value_layer,
+        dataType:"xml",
+        success:function(xml){
+          var select = $("#selectAttribute");
+          //var title = $(xml).find('xsd\\:complexType').attr('name');
+          //alert(title);
+          select.append("<option class='ddindent' value=''></option>");
+        console.log("xml--xmll",$(xml))
+          $(xml).find('xsd\\:sequence').each(function(){
+         //   console.log("$this11...: ", $(this))
+            $(this).find('xsd\\:element').each(function(){
+          //    console.log("$this22...: ", $(this))
+              var value = $(this).attr('name');
+              
+              //alert(value)
+              var type = $(this).attr('type');
+              //alert(type)
+              if(value != 'geom' && value != 'the geom'){
+                select.append("<option class='ddindent' value='"+ type +"'>"+ value +"</option>")
+              }
+
+
+            })
+          })
+        }
+      })
+    })
+  }
+
+  
+
+  document.getElementById("selectAttribute").onchange =  function(){
+    var operator = document.getElementById("selectOperator");
+    while(operator.options.length > 0){
+      operator.remove(0);
+    }
+  
+    var value_type = $(this).val();
+    console.log("value_type: ", value_type);
+    //javascriptte css gibi bir elementi secebildigmiz zaman css den daha efektif bir sekilde kullanabiliyuoruz...yani biz selected-secilen option i javascriptte css secicileri gibi secerek erisebiliyoruz...bu harika bir ozellik
+    var value_attribute = $('#selectAttribute option:selected').text();
+    operator.options[0] = new Option("Select operator", "");
+    if(value_type == "xsd:short"  || value_type == "xsd:int"  || value_type == "xsd:double"){
+      var operator1 = document.getElementById("selectOperator");
+      operator1.options[1] = new Option("Greater than", ">");
+      operator1.options[2] = new Option("Less than", "<");
+      operator1.options[3] = new Option("Equal to", "=");
+  
+    }else if(value_type == "xsd:string"){
+      var operator1 = document.getElementById("selectOperator");
+      operator1.options[1] = new Option("Like", "Like");
+      operator1.options[2] = new Option("Equal to", "=");
+     
+    }
+  }
+
+  document.getElementById("attQryRun").onclick =  function (){
+    map.set("isLoading", "YES");
+  
+    if(featureOverlay){
+      featureOverlay.getSource().clear();
+      map.removeLayer(featureOverlay);
+    }
+  
+    var layer = document.getElementById("selectLayer");//select html element
+    var attribute = document.getElementById("selectAttribute");
+    var operator = document.getElementById("selectOperator");
+    var txt = document.getElementById("enterValue");
+  
+    if(layer.options.selectedIndex == 0){
+      alert("Select Layer");
+    }else if(attribute.options.selectedIndex == -1){
+      alert("Select Attribute");
+    }else if(operator.options.selectedIndex <= 0){
+      alert("Select Operator");
+    }else if(txt.value.length <= 0){
+      alert("Enter Value");
+    }else {
+  
+      var value_layer = layer.options[layer.selectedIndex].value;
+      var value_attribute = attribute.options[attribute.selectedIndex].text;
+      var value_operator = operator.options[operator.selectedIndex].value;
+      var value_txt = txt.value;
+  
+      if(value_operator == "Like"){
+        value_txt = "%25" + value_txt + "%25";
+      }else{
+        value_txt = value_txt;
+      }
+      //http://localhost:9090/geoserver/geo-demo/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=geo-demo%3Apolbnda_ind_pg&maxFeatures=50&outputFormat=text%2Fxml%3B%20subtype%3Dgml%2F2.1.2
+      var url = "http://localhost:9090/geoserver/geo-demo/ows?service=WFS&version=1.0.0&request=GetFeature&typeName="+ value_layer + "&CQL_FILTER="+value_attribute + "+" + value_operator + "+'" + value_txt + "'&outputFormat=application/json"; 
+     // &maxFeatures=50  &outputFormat=text/xml%3B%20subtype%3Dgml%2F2.1.2
+  
+     console.log("ENTER---URL: ", url);
+     newaddGeoJsonToMap(url);
+    
+     setTimeout( function(
+  
+     ){
+      newpopulateQueryTable(url, newaddRowHandlers);
+      
+   
+    }, 300);//Burasi query-popup inda ki filtrelemeler yapildiktan sonra enter a basinca zoom-level artarak tiklanan alana zoom-in yapilmasi saglayan fonksiyondur
+     map.set("isLoading", "NO");
+    }
+  }
+
+
+  document.getElementById("attQryClear").onclick =  function () {
+    if(queryGeoJSON){
+      queryGeoJSON.getSource().clear();
+      map.removeLayer(queryGeoJSON);
+    }
+
+    if(clickSelectedFeatureOverlay){
+      clickSelectedFeatureOverlay.getSource().clear();
+      map.removeLayer(clickSelectedFeatureOverlay);
+    }
+
+    coordList = "";
+    markerFeature = undefined; 
+    document.getElementById("attListDiv").style.display = "none";
+  }
+
+  var mapInteractions = map.getInteractions();//map  uzerinden de interations lara bu sekilde erisebilirz 
+  //getInteractions(){Collection<Interaction>} donen deger openlyaers dan bakabiliriz, Collection<Interaction>
+
+
+})

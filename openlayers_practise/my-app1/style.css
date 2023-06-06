@@ -159,6 +159,15 @@ ol.popup-closer:after {
   padding-right: 4rem;
   margin-top: 1rem;
 }
+
+.bufferButtonDiv{
+  display:flex;
+  justify-content: flex-end;
+  padding-right: 4rem;
+  margin-top: 1rem;
+}
+
+
 .myButton {
   background-color: rgba(22,85,167,.6);
   background: none;
@@ -360,3 +369,92 @@ border: 1px solid black;
   /* {font-weight:bolder; background-color:rgb(225, 225, 225)} */
   background-color: lightgrey;
 }
+
+/* query-end */
+
+/* spatial query start*/
+.spUserInput {
+  color: white;
+  background-color: rgb(95,125,207);
+  border-radius:3px;
+  border: 1px solid rgb(0,0,0);
+  height: 35px;
+  width: 50px;
+  margin:10px;
+}
+
+#bufferDistance {
+  width: 100px;
+}
+
+#distanceUnits {
+  width: 100px;
+  margin: 0px auto 0px 20px;
+}
+
+.spUserInput.clicked {
+  background-color: rgb(230,107,107);
+}
+
+.spQryRun {
+  color: white;
+  background-color: green;
+  border-radius: 3px;
+  border: 1px solid black;
+  height: 35px;
+  width: 50px;
+  margin: 10px 22px 10px 22px;
+
+}
+
+.spQryClear {
+  /* position:absolute; */
+  color: white;
+  background-color: slategray;
+  border-radius: 3px;
+  border: 1px solid black;
+  height: 35px;
+  width: 50px;
+  margin: 10px ;
+}
+
+.spQueryDiv {
+  position: absolute;
+  display: none;
+  top: 10px;
+  left: 45px;
+  /*margin:65px auto auto 45px; */
+  width: 250px;
+  background-color: rgba(255, 255, 255, 0.9);
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-size: 1em;
+  line-height: 1.45;
+  border-radius: 2px;
+  border: 1px solid #d1d1d1;
+  box-shadow: 0px 0px 15px rgba(100, 100, 100, 0.5);
+  /* z-index:4; */
+  /* overflow:scroll;*/
+}
+
+.spQueryDiv select {
+  width: 225px;
+  height: 35px;
+  border: 1px solid lightgrey;
+  border-radius:3px;
+  margin: 0px auto 20px 10px;
+}
+
+.spQueryDiv input {
+  width: 225px;
+  height: 35px;
+  border: 1px solid lightgrey;
+  border-radius:3px;
+  margin: 0px auto 20px 10px;
+}
+
+.spQueryDiv label {
+  color: grey;
+  margin: 10px 10px 0px 10px;
+}
+
+/* spatial query - end*/
