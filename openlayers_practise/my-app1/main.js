@@ -27,6 +27,9 @@ import {getArea, getLength} from 'ol/sphere.js';
 import DragBox from 'ol/interaction/DragBox.js';
 import {getCenter} from 'ol/extent';
 import GeoJSON from 'ol/format/GeoJSON.js';
+import DoubleClickZoom from 'ol/interaction/DoubleClickZoom.js';
+import DragPan from 'ol/interaction/DragPan.js';
+import LayerSwitcherPanel from 'ol-layerswitcher';
 
 let mapView =new View({
   center: fromLonLat([78.766032, 23.7662398]),
@@ -1569,6 +1572,8 @@ $(function() {// $(document).ready(function(){ - bununla ayni seydir  $(function
 
   var toc = document.getElementById("layerSwitcherContent");
   layerSwitcher = new LayerSwitcher.renderPanel(map, toc, {reverse:true});
+//  layerSwitcher = new LayerSwitcherPanel(map, toc, {reverse:true});
+  
 
   document.getElementById("selectLayer").onchange = function() {
     var select = document.getElementById("selectAttribute");
@@ -1704,8 +1709,309 @@ $(function() {// $(document).ready(function(){ - bununla ayni seydir  $(function
     document.getElementById("attListDiv").style.display = "none";
   }
 
+var markerFeature;
+function  addInteractionForSpatialQuery(intType){
+  draw = new Draw({
+    source:clickSelectedFeatureOverlay.getSource(),
+    type:intType,
+    style:interactionStyle
+  })
+
+  map.addInteraction(draw);
+  draw.on("drawend", function(e){
+    markerFeature = e.feature;
+    markerFeature.set("geometry", markerFeature.getGeometry());
+    map.removeInteraction(draw);
+    document.getElementById("spUserInput").classList.toggle("clicked");
+    map.addLayer(clickSelectedFeatureOverlay);
+  })
+}
+
+function selectFeature(evt){
+  if(featureOverlay){
+    featureOverlay.getSource().clear();
+    map.removeLayer(featureOverlay);
+  }
+  //Hangi featureye tikladigmzi hem bu sekilde hem de select interactino uzerinden elde edebiliyorduk..
+  var selectedFeature = map.forEachFeatureAtPixel(evt.pixel, 
+    function(feature, layer){
+      return feature;
+    }
+    )
+}
+
+  document.getElementById("srcCriteria").onchange = function(){
+    if(queryGeoJSON){
+       queryGeoJSON.getSource().clear();
+       map.removeLayer(queryGeoJSON);
+    }
+ 
+    if(clickSelectedFeatureOverlay){
+     clickSelectedFeatureOverlay.getSource().clear();
+     map.removeLayer(clickSelectedFeatureOverlay);
+    }
+ 
+    if(document.getElementById("spUserInput").classList.contains("clicked")){document.getElementById("spUserInput").classList.toggle("clicked")}
+ }
+ 
+ document.getElementById("spUserInput").onclick = function(){
+  document.getElementById("spUserInput").classList.toggle("clicked")
+  if(document.getElementById("spUserInput").classList.toggle("clicked")){
+
+
+    if(queryGeoJSON){
+      queryGeoJSON.getSource().clear();
+      map.removeLayer(queryGeoJSON);
+   }
+ 
+   if(clickSelectedFeatureOverlay){
+    clickSelectedFeatureOverlay.getSource().clear();
+    map.removeLayer(clickSelectedFeatureOverlay);
+   }
+  
+   //Kulanicin hangi interactioni secer ise select-option da onu aktif hale getirecegiz, point,line veya polygon
+   var srcCriteriaValue = document.getElementById("srcCriteria").value; 
+   if(srcCriteriaValue == "pointMarker"){
+    addInteractionForSpatialQuery("Point");
+   }
+   if(srcCriteriaValue == "lineMarker"){
+    addInteractionForSpatialQuery("LineString");
+   }
+   if(srcCriteriaValue == "polygonMarker"){
+    addInteractionForSpatialQuery("Polygon");
+   }
+
+  }else{
+    coordList = "";
+    markerFeature = undefined;
+    map.removeInteraction(draw);
+  }
+ 
+
+}
+
+
+//KUllanici en ust select-option da once bizim listeledgimz layer lari gorur ki burda da biz bir listeleme tricksi yaptik cunku getCapabiliteis da , geoserver daki tum layer lari getiriyor biz onun yerine, sadece bizim istedgimz 3 tanesini almak istedik...BESTPRACTISE..
+//Ardindan kullanici ya hangi tur kriter secmek istedgini sectiriyoruz burda da Within Distance Of yani verilecek distance iceriisndeki alanlari secen query, ya da intersect yani ornegin secilen interaction eger polygon olur ise o polyugon ile cakisan, posizyonlari da getir diyebiliriz diger query secenginin secersek y a d a Completely Within yani tamamen icerisinde bu da mhtemeln polygonlar icin olabilir tmamen o polygon un alani icerisinde olan lari getirecek query i hazirlamak icin
+//Ardindan kullaniciya bir input veriyoruz ki oraya mesafe girsin diye ve hemen yanina da unit yani o mesaje metre mi, kilometre mi her ne ise onun cinsini girsin diye..
+//Daha sonra da kullanici point, linestring veya polygon dan birini secsin ve select iconuna basinca da bu sectigi hangisii ise onu Draw interaction ile cizebilsin onu istiyoruz ve son olarak Run butonu da artik kullanicinin sectigi kriterlere gore kullanicinn cizdigi point, line veya polygon a verilen mesafedeki vecktorleri point,line veya polygon lari filtrelesin, ve kullaniciya farkli bir style da gosterebilelim!!!!!HARIKA BIR OZLELLIK!!!!
+
+document.getElementById("spQryRun").onclick = function(){
+  var layer = document.getElementById("buffSelectLayer");
+  var value_layer = layer.options[layer.selectedIndex].value;
+
+  var srcCriteria = document.getElementById("srcCriteria");
+  var value_src = srcCriteria.options[srcCriteria.selectedIndex].value;
+  var coordList = "";
+  var url;
+  var markerType = "";
+  if(markerFeature){
+    if(value_src == "pointMarker")
+    {
+      coordList = markerFeature.getGeometry().getCoordinates()[0]+ " "+ markerFeature.getGeometry().getCoordinates()[1];
+      markerType = "Point";
+    }
+    if(value_src == "lineMarker"){
+      var coordArray = markerFeature.getGeometry().getCoordinates();
+      for(var i=0; i<coordArray.length; i++){
+          if(i == 0){
+            coordList = coordArray[i][0] + " " + coordArray[i][1];
+
+          }else{
+            coordList = coordList + ", " + coordArray[i][0] + " " + coordArray[i][1];
+          }
+      }
+      markerType = "LineString";
+    }
+
+    if(value_src == "polygonMarker"){
+      var coordArray = markerFeature.getGeometry().getCoordinates()[0];
+      for(var i=0; i<coordArray.length; i++){
+          if(i == 0){
+            coordList = coordArray[i][0] + " " + coordArray[i][1];
+
+          }else{
+            coordList = coordList + ", " + coordArray[i][0] + " " + coordArray[i][1];
+          }
+                 
+      }
+
+      coordList = "(" + coordList + ")";
+      markerType = "Polygon";
+
+    }
+
+    //kullanicinin girdigi inputa gore coordinat listesi hazir olunca query nin type ini kontrol etmemiz gerekir
+    var value_attribute = $("#qryType option:selected").text();
+    if(value_attribute == "Within Distance of"){
+      var dist = document.getElementById("bufferDistance");
+
+      //Distance parameter yani distance value ve distanceUnit de secebiliyoruz
+      var value_dist = Number(dist.value);
+      //value_dist = value_dist / 111.325
+
+      var distanceUnit = document.getElementById("distanceUnits");
+      var value_distanceUnit = distanceUnit.options[distanceUnit.selectedIndex].value;
+      //Distance value ve distance unit hazir olunca artik query url imizi kullanabiliriz kritlerimiz i kullanabiliriz
+      //serverPost yani :9090 ve geoserverWorkspace i yani geo-demo yu dinamik olarak kullanabiliriz
+      //url = "http://localhost"+ serverPort +"/geoserver/"+ geoserverWorkspace +"/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=geo-demo:ind_adm12_pg&CQL_FILTER=id_1+%3E+%2715%27&outputFormat=application/json"
+      //geoserverWorkspace = geo-demo
+      //value_layer=geo-demo:ind_adm12_pg
+      url = "http://localhost:9090/geoserver/"+geoserverWorkspace+"/ows?service=WFS&version=1.0.0&request=GetFeature&typeName="+value_layer+"&CQL_FILTER=DWITHIN(geom,"+ markerType +"("+coordList+")," + value_dist  +","+ value_distanceUnit +")&outputFormat=application/json"
+      //BESTPRACTISE-WFS SERVICE UZERINDEN KULLANICININ INPUT ALANINA GIRDIGI DISTANCE ICERISINDE OLAN, POINT VEYA POZISYONLARI GETIRECEK..HARIKA BESTPRACTISE..
+      //DWITHIN QUERY FINDING FOR FEATURE WITHIN DISTANCE 
+      //Geojson olarak gonder bize output u diyoruz
+    }else if(value_attribute == "Intersecting"){
+      url = "http://localhost:9090/geoserver/"+geoserverWorkspace+"/ows?service=WFS&version=1.0.0&request=GetFeature&typeName="+value_layer+"&CQL_FILTER=DWITHIN(geom,"+ markerType +"("+coordList+")," + value_dist  +","+ value_distanceUnit +")&outputFormat=application/json"
+    }else if(value_attribute == "Completely Within"){
+      url = "http://localhost:9090/geoserver/"+geoserverWorkspace+"/ows?service=WFS&version=1.0.0&request=GetFeature&typeName="+value_layer+"&CQL_FILTER=DWITHIN(geom,"+ markerType +"("+coordList+")," + value_dist  +","+ value_distanceUnit +")&outputFormat=application/json"
+    }
+
+    newaddGeoJsonToMap(url);
+    coordList = "";
+    markerFeature = undefined;
+  }
+}
+
+  //BURAYA IYI ODAKLANALIM -  BIZ DOBULCECLICK ZOOM VE DRAGPAN-DRAG AND DROP OZELLIGINI KALDIRIYORUZ, YANI MAPSEARCH QUERY ICONUNA TIKLADIGINDA , DEFAULT OLARAK GELEN DOUBLECLICK-ZOOM VE DRAG AND DROP OZELLIGINI KALDIRIYORUZ...BESTPRACTISE.... 
   var mapInteractions = map.getInteractions();//map  uzerinden de interations lara bu sekilde erisebilirz 
   //getInteractions(){Collection<Interaction>} donen deger openlyaers dan bakabiliriz, Collection<Interaction>
+  //Collection larda uzunlugu mapInteractions.getLength() bu sekilde aliriz, bunu Collection dokumantasyonunda da bulabilirz
+  for(var x= 0; x < mapInteractions.getLength(); x++){
+      var mapInteraction = mapInteractions.item(x);//for-loop icerisinde her bir collection elementine bu sekilde erisilir
+      if(mapInteraction instanceof DoubleClickZoom){//Simdi biz tum interactionlarin icinde oldugu collection i donduruyoruz ama, her bir interaction in hangi interaction class indan turetildigini-derived veya hangi interaction class inin bir example i yani instancesi oldugunu bilmiyoruz..ONUN ICIN DE BU SEKILDE CHECK EDEBILIYORUZ..BURASI ISTE HARIKA BESTPRACTISE...BIZ KIMI ZAMAN INTERACTION LAR ARASINDA BIRBIRI ICERISINE GIRMIS AYNI ANDA TETIKLENEN INTERACTIONLARI AYIRT ETMEK, BIRISI CALISIRKEN DIGERI CALISMASIN ISTEYEBILIRIZ...OZELLIKLE BOYLE DURUMLARDA BU KULLANIMI COK FAZLA YAPARIZ... 
+        map.removeInteraction(mapInteraction);
+        break;
+      }
+  }
+
+
+  for(var x= 0; x < mapInteractions.getLength(); x++){
+    var mapInteraction = mapInteractions.item(x);
+
+    if(mapInteraction instanceof DragPan){
+      map.removeInteraction(mapInteraction);
+      break;
+
+    }
+
+  }
+
+//Events listening islemlerini bu sekilde de  yapabiliyoruz.. 
+  document.getElementById("qryType").onchange = function(){
+      var value_attribute = $("#qryType option:selected").text();
+      var buffDivElement =document.getElementById("bufferDiv");
+      if(value_attribute == "Within Distance of"){
+        buffDivElement.style.display = "block";
+      }else{
+        buffDivElement.style.display = "none";
+      }
+  }
+
+
+  document.getElementById("spQryClear").onclick = function(){
+   if(queryGeoJSON){
+      queryGeoJSON.getSource().clear();
+      map.removeLayer(queryGeoJSON);
+   }
+
+   if(clickSelectedFeatureOverlay){
+    clickSelectedFeatureOverlay.getSource().clear();
+    map.removeLayer(clickSelectedFeatureOverlay);
+   }
+
+   coordList = "";
+   markerFeature = undefined;
+}
 
 
 })
+
+//Intersecting Query - Biz vakit kaybetmemek icin, kullanicinin layer i sectigini, query select optoinslari  icerisinden de intersecting i sectigin kabul ediyoruz, intersecting i sectigi zaman distance secmeye gerek yok cunku intersect kullancinin cizecegi vektor-geo-feature ile secilen layer icerisinde bulunan vector-goe-feature ler arasindaki cakisma ile ortaya cikar
+//Sonra da kullanicinin point, lineString veya polygon secmesine gore cizdigi bu draw interaction type larina gore intersect olan secilen layer da bulunan vector-geo-feature leri filtreleyip bulacagiz..
+//Biz simdi bu intersection ozelligi cizilen drawinteraction type ina gore yani point, lineString veya polygon a gore nasil implemente ediliyor ona bakacagiz..Run butonuna basildiginda gerceklesecek olan islemlere bakacagiz!!!!!!!!!!!
+//1-layer secilir(Kullanici nin cizgigi point-line-polygon  ne ise buna intersect olacak olan vector-geo-features leri secilen layer daki feature ler uygulanacak) 2-query olarak instance secilir(Within Distance of- intersecting - Completely within) icerisinden 3 -from dan Point Marker-Line Marker - Polygon Marker dan da birisi secilir ardindan da select iconu var parmak isareti o icona basilinca artik kullanici sectigi point-line-veya polygon her ne ise onu cizer iste buraya kadar geldikten sonra kullanici Run butonuna basinca intersecting query filtreleme islemiini implemente etmis olacaktir...Biz asagida Run butonan basildiktan sonra ki kismi ele alacagiz 
+
+//Intersecting query-Run
+
+document.getElementById("spQryRun").onclick = function(){
+  var layer = document.getElementById("buffSelectLayer");//identify-selection layer
+  var value_layer = layer.options[layer.selectedIndex].value;//which layer user selected
+
+  var srcCriteria = document.getElementById("srcCriteria");//criteria
+  var value_src = srcCriteria.options[srcCriteria.selectedIndex].value;//
+  //Kullanici hangi interaction i secti ise select-options dan onun value sidir.. addInteractionForSpatialQuery(intType) fonksiyonu uzerinden secilen type a gore DrawInteraction da point-lineString veya polygon ciziliyordu
+  var coordList = "";
+  var url;
+  var markerType = "";
+  if(markerFeature){
+    if(value_src == "pointMarker")
+    {
+      coordList = markerFeature.getGeometry().getCoordinates()[0]+ " "+ markerFeature.getGeometry().getCoordinates()[1];
+      markerType = "Point";
+    }
+    if(value_src == "lineMarker"){
+      var coordArray = markerFeature.getGeometry().getCoordinates();
+      for(var i=0; i<coordArray.length; i++){
+          if(i == 0){
+            coordList = coordArray[i][0] + " " + coordArray[i][1];
+
+          }else{
+            coordList = coordList + ", " + coordArray[i][0] + " " + coordArray[i][1];
+          }
+      }
+      markerType = "LineString";
+    }
+
+    if(value_src == "polygonMarker"){
+      var coordArray = markerFeature.getGeometry().getCoordinates()[0];
+      for(var i=0; i<coordArray.length; i++){
+          if(i == 0){
+            coordList = coordArray[i][0] + " " + coordArray[i][1];
+
+          }else{
+            coordList = coordList + ", " + coordArray[i][0] + " " + coordArray[i][1];
+          }
+                 
+      }
+
+      coordList = "(" + coordList + ")";
+      markerType = "Polygon";
+
+    }
+
+    //kullanicinin girdigi inputa gore coordinat listesi hazir olunca query nin type ini kontrol etmemiz gerekir
+    var value_attribute = $("#qryType option:selected").text();
+    //Eger Within Distance of kriteri secilmis ise o zaman onun altinaki filtrelemeyi uygulayacak demektir.. 
+    if(value_attribute == "Within Distance of"){
+      var dist = document.getElementById("bufferDistance");
+
+      //Distance parameter yani distance value ve distanceUnit de secebiliyoruz
+      var value_dist = Number(dist.value);
+      //value_dist = value_dist / 111.325
+
+      var distanceUnit = document.getElementById("distanceUnits");
+      var value_distanceUnit = distanceUnit.options[distanceUnit.selectedIndex].value;
+      //Distance value ve distance unit hazir olunca artik query url imizi kullanabiliriz kritlerimiz i kullanabiliriz
+      //serverPost yani :9090 ve geoserverWorkspace i yani geo-demo yu dinamik olarak kullanabiliriz
+      //url = "http://localhost"+ serverPort +"/geoserver/"+ geoserverWorkspace +"/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=geo-demo:ind_adm12_pg&CQL_FILTER=id_1+%3E+%2715%27&outputFormat=application/json"
+      //geoserverWorkspace = geo-demo
+      //value_layer=geo-demo:ind_adm12_pg
+      url = "http://localhost:9090/geoserver/"+geoserverWorkspace+"/ows?service=WFS&version=1.0.0&request=GetFeature&typeName="+value_layer+"&CQL_FILTER=DWITHIN(geom,"+ markerType +"("+coordList+")," + value_dist  +","+ value_distanceUnit +")&outputFormat=application/json"
+      //BESTPRACTISE-WFS SERVICE UZERINDEN KULLANICININ INPUT ALANINA GIRDIGI DISTANCE ICERISINDE OLAN, POINT VEYA POZISYONLARI GETIRECEK..HARIKA BESTPRACTISE..
+      //DWITHIN QUERY FINDING FOR FEATURE WITHIN DISTANCE 
+      //Geojson olarak gonder bize output u diyoruz
+    }else if(value_attribute == "Intersecting"){
+      url = "http://localhost:9090/geoserver/"+geoserverWorkspace+"/ows?service=WFS&version=1.0.0&request=GetFeature&typeName="+value_layer+"&CQL_FILTER=INTERSECTS(geom,"+ markerType +"("+coordList+")," + value_dist  +","+ value_distanceUnit +")&outputFormat=application/json"
+    }else if(value_attribute == "Completely Within"){
+      url = "http://localhost:9090/geoserver/"+geoserverWorkspace+"/ows?service=WFS&version=1.0.0&request=GetFeature&typeName="+value_layer+"&CQL_FILTER=WITHIN(geom,"+ markerType +"("+coordList+")," + value_dist  +","+ value_distanceUnit +")&outputFormat=application/json"
+    }
+
+    newaddGeoJsonToMap(url);
+    coordList = "";
+    markerFeature = undefined;
+  }
+}
+
+
+//GeoLocation...Functionality...
