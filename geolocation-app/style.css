@@ -1,0 +1,35 @@
+@import "node_modules/ol/ol.css";
+
+html, body {
+  margin: 0;
+  height: 100%;
+}
+#map {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 100%;
+}
+
+.geolocationContent {
+  display:flex;
+  justify-content: flex-end;
+  padding: 2rem;
+  padding-right: 4rem;
+}
+
+
+
+.geolocationBtn {
+ /* background-color: rgba(22,85,167,.6); */
+  background: none;
+  color: white;
+  font-weight: 700;
+  text-align: center;
+  height: 25px;
+  width: 25px;
+  border-radius: 2px;
+  border: none;
+  align-items:center;
+}
+
