@@ -11,6 +11,8 @@
   },
   "dependencies": {
     "jquery": "^3.7.0",
-    "ol": "latest"
+    "ol": "latest",
+    "uniqid": "^5.4.0",
+    "uuid": "^9.0.0"
   }
 }

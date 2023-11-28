@@ -36,6 +36,7 @@ const map = new Map({
    layers: [
       new TileLayer({
          source: new OSM(),
+         minResolution: 20
       }),
       vector,
    ],
@@ -92,6 +93,8 @@ const featureLine2 = new Feature({
 });
 
 
+
+
 let pointCoords = [1598434.680154215, 6473258.354921961];
 
 const featurePolygon = new Feature({
@@ -109,7 +112,17 @@ const featurePoint = new Feature({
    name: "My Point",
 });
 
-let features = [featurePoint, featureLine, featurePolygon];
+const source2 = new VectorSource();
+const vector2 = new VectorLayer({
+  source: source2,
+  maxResolution:7000
+});
+
+source2.addFeatures([featurePolygon]);
+
+map.addLayer(vector2);
+
+let features = [featurePoint];
 source.addFeatures([...features]);
 
 //1-Sonradan herhangi bir feature e eklemenenin yollarindan biri bu
@@ -117,6 +130,17 @@ source.addFeatures([...features]);
 
 //2. Sonradan bir feature eklemenin baska bir yolu da budur
 source.addFeatures([featureLine2]);
+
+
+const source3 = new VectorSource();
+const vector3 = new VectorLayer({
+  source: source3,
+  minResolution:5000
+});
+
+source3.addFeatures([featureLine]);
+
+map.addLayer(vector3);
 
 
 
@@ -186,8 +210,6 @@ document.getElementById("polygon").addEventListener("click",function(){
    
   })
 })
-
-
 
 
 document.getElementById("point").addEventListener("click",function(){
@@ -310,3 +332,18 @@ document.getElementById("select").addEventListener("click",function(event){
   }
 
 */
+
+// Get the view from the map
+const view = map.getView();
+
+// Listen for the 'change:resolution' event
+view.on('change:resolution', function(event) {
+  // Get the updated resolution when the event is triggered
+  const newResolution = view.getResolution();
+  
+  // Perform actions based on the new resolution (for demonstration purposes)
+  console.log('Resolution changed to:', newResolution);
+  //Resolution changed to: 7765.518022989552 resolution data si bu sekilde gelir...direk bu deger e gore minResolution ve maxResolution i atamamiz gerekir
+  
+  // Add your custom logic here based on the resolution change
+});

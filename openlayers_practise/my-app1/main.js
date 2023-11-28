@@ -30,6 +30,11 @@ import GeoJSON from 'ol/format/GeoJSON.js';
 import DoubleClickZoom from 'ol/interaction/DoubleClickZoom.js';
 import DragPan from 'ol/interaction/DragPan.js';
 import LayerSwitcherPanel from 'ol-layerswitcher';
+import * as olLoadingstrategy from 'ol/loadingstrategy';
+import {bbox} from 'ol/loadingstrategy';
+import Snap from 'ol/interaction/Snap.js';
+import WFS from 'ol/format/WFS.js';
+import GML from 'ol/format/GML.js';
 
 let mapView =new View({
   center: fromLonLat([78.766032, 23.7662398]),
@@ -2013,5 +2018,498 @@ document.getElementById("spQryRun").onclick = function(){
   }
 }
 
+//OPENLAYERS-GEOSERVER-POSTGRESQL(POSTGIS)
+//WFS-TRANSACTION...INSERT-MODIFY-DELETE..
 
-//GeoLocation...Functionality...
+//Editing Functionalitt(add-modify-delete features)
+//Iki tane icon umuz var, birisi settings iconu birisi de startEditing veya Edit buttonu
+//Settings iconuna tiklayinca popup acilir ve kullaniciya, hangi layer uzerinde edit yapmak istiyorsa o layer i secer, select-options lar icerisinden
+//Edit-icon-button a tiklayinca hemen o icon un yaninda alt alt a 3 icon ortya cikacak ve de start edit iconu aktiv-yesil bakcground-color a sahip olacak..Ve de kullanici hangi layer i secti ise ilk olarak edit yapmak icin o layer a ait tum features ler highlighed yani farkli bir style da gosterilecek ki kullanici icin daha anlasilir olsun hangi features lar uzerinde edit yapilacak
+//Ilk start-edit icon butonuna tiklayinca 3 tane sub-icon-buttonlar yaninda alt alta ortaya cikiyordu Bunlar in islevi nedir ona bakalim..1-Addfeature 2-ModifyFeature 3-DeleteFeature
+//Ve StartEditIcon undan sonra, gelen 3 tane subbutton ile beraber, 1-AddFeature e tiklayarak bu ozelligi nasil uygulayacagiz buna bakalim
+//ADDFEATURE!!!!!
+//AddFeature a tiklayinca bizim polygon type inda ki DrawInteraction imiz aktif hale geliyor ve biz ornegin sectimgiz layer evlerden olusan bir layer oldugunu varsayarsak, biz de ornegin istedgimiz herhangi bir veya birkac yere yeni alanlar olusturabiliyoruz..Ekleme islemini uygulamak icin, diger buildgingler yani secilen layer ile gelen buildingler veya alanlar WMS services den gelen feature lerdir
+//Simdi sunu anlayalim...kullanici layer sectikten sonra ve de startEdit iconuna basinca o layer a ait features lerin highlighed olmasi ve farkli bir style ile stillenerek gelmesi geoserver dan WMS den service sinden geliyor...Ama ardindan bizim addFeature a tiklayarak yeni alanlar cizmemiz bunlar Geoserver in  bir parcais degil bunlari biz direk map e bizim tarafimizdan eklenen features lerdir, yani map in altinda bir paca olmus oluyorlar...geoserver in bir parcasi degildir 
+//Devam edecek olursak islevsellige, kullanici bir kez daha addFeature icon-butonuna tikladigi zaman bize cizdigimz polygonlari kaydetmek isteyip istemedigimzi soracak popup araciligi ile ve biz ok dersek o zaman artik bizim ekledigmz 3 yeni poolygonu da artik geoserver dan gelen layer a database  de ekleyecek -POSTGRESQL-GEOSERVER-OPENLAYERS UCLUSU ILE SUNDGUMUZ LAYER POSTGRESSQL DE BIZIM YENI CIZDGIMZ POLYGONLARI DA EKLEMIS OLACAK
+//Ardindan zoom-in, veya zoom-out yaptigimiz zaman hatirlarsak WMS-service icin bu request gondermek ve yeni image datasini, zoom level a gore olan  yeni image data sini fetch etme islemi yapiyordu..Biz startEdit iconunu kapatip zoom-in zoom-out yatigimzda artik ekledigmiz polygonlarinda o layer in wms services ile gelmesini bize gosterilmesini bekliyoruz...
+//MODIFYFEATURE!!!!!
+//StartEditIcon ve ardindan sub-iconlardan modify iconbutton secilir, ardindan en basta secilen layer a ait polygon feature ler farkli bir style ile karsimzia geliyordu ve kullanici modify-iconuna bastiginda artik kullanci nin sectigi herhangi bir polygon(WMS-service ile geoserver dan gelen) farkli bir style ile fill edilerek gosterilir secildigi anlasilmasi icin ve modify edilmeye hazir demektir bu zaten, yani Modify interactin secilen polygon icin aktif hale getirilmis oluyor, Burda suna dikkat edelim..biz modify interaction i ile secilen polygonun istedgimiz tarafindan genisletebilirken veya istedgimz sekilde polygonu n alanini degistirirken, polygonun ilk hali gri  bir style ile arkada gozukuyor..BU NASIL OLUYORDU HATIRLAYALIM.. SIMDI WMS-SERVICE ILE ONCE SECILEN LAYER IN ICINDEKI POLYGONLAR GRI RENKLI BIR STYLE ILE YAYINLANARAK KULLANILIYOR ARDINDAN ISE KULLANICI START-EDIT E BASINCA, BIR DE AYNI WMS-SERVICE NIN POLYGON FEATURE LARINA STROKE RENKI DEGISTIRILMIS WMS-SERVICE SI DE YAYINLANIYOR(BU ARADA BU WMS DEGIL WFS OLLACAK CUNKU WMS UZERINDE EDIT YAPILAMAZ, WFS UZERINDE EDIT YAPILABILIYOR VE BIZ WFS I DE YAYINLAYABILIYORUZ... ZATEN...DIREK HARITA UZERINDE GOSTERECEK SEKILDE...) GEOSERVERDAN YANI BIZ 1 WMS-SERVICE-1 WFS SERVVICE(1 WMS ALTTA- BIR DE WFS USTTE OLACAK SEKILDE) I BIRDEN KULLANMIS OLUYORUZ ONDAN DOLAYI ASLINDA POLYGONLAR UST USTE GELIYOR BIZ USTTEKI WMS-SERVICE HANGISI ISE ONCE ONU GORUYORUZ USTTE OLAN DEMEK EN SON EKLENEN DEMEKTIR VEYA BIZ ONCELIKLERINI DE ZINDEX OPTION I KULLANARAK DA AYARLAYABILIYORDUK ZATEN!!!!!!YANI KULLANICI MODIFY EDINCE STROKE VERILMIS OLAN WMS-SERVICE DEN GELEN SOURCE YE AIT POLYGON MODIFY EDILDIGI ICIN, ALTTA SADECE GRI STYLE A SAHIP OLAN POLYGON BIZE POLYGONUN ILK HALINI GOSTERMIS OLUYOR..BU KULLANIM HARIKA...GERCEKTEN...COK EFFEKTIF...BIR KULANIM!!!!!!!!!
+/*
+EXAMPLE OF WFS-SERVICE USAGE ON OPENLAYERS
+let wfs_url = 'http://localhost:9090/geoserver/geo-demo/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=geo-demo%3Aind_adm12_pg&maxFeatures=50&outputFormat=application%2Fjson';
+ let geoJson = new VectorLayer({
+    title:'WFS_layer',
+    source: new VectorSource({
+      url:wfs_url,
+    //  url:wfs_filtered_url,
+    // url:wfs_intersect_filtered_url,
+    //  url:wfs_bbox_filtered_url,
+      format: new GeoJSON(),//geojson veya dier WFS formatiindan birini kullanabiliriz, bu optionslari geoserver da layerpreview da layer select-option da gorebiliriz
+      style:style
+    })
+   })
+  
+  overlayLayerGroup.getLayers().push(geoJson);
+  */
+//BU ARADA SUNU DA BILELIM AYNI ANDA BIZ HANGI POLYGONU SECERSEK ONU MODIFY EDEBILIYORUZ!!!VE ORNEGIN 1 TANE POLYGONU MODIFY ETTIK VE BIR DIGERINI MODIFY ETMEK ICIN GECTIK O ZAMAN MODIFY ETTGIMZ POLYGON UN SADECE STROKE U DIGER POLYGONLAR LA AYNI OLUYOR VE O POLYGON ICINDE ZATEN POLYGONUN ILK HALI TAMAMEN GRI STYLE ILE GOSTERILIYOR MODIFY EDILEREK GENISLETILEN YERLERIN FILL I ISE BEYAZ OLARAK KALIYOR VE YENI BIR POLYGON A MODIFY ETMEYE BASLANDIGINDA, O ANDA MODIFY EDILEN POLYGONUN ICI FILL OLARAK STILLENDIRILIYOR VE MODIFY ISLEMLERIMIZ BITTIKTEN SONRA TEKRAR MODIFY SUB-ICON BUTTONUNA TIKLAYINCA BIZE POPUP DA DEGISIKLIKLERI KAYDETMEK ISTEDIGMZI SORACAK VE AYNI SEKILDE BIZ OK DEYIP DEGISIKLIKKLERI KAYDETTIMGZDE VE MODIFYICONBUTTONA PASIF HALE GETIRIP ZOOM-IN VE ZOOM-OUT YAPTIGJIIMZDA REQUEST GONDERILIP YENI IMAGE LER FETCH EDILDIGI ICIN ARTIK KAYDEDILMIS OLUYOR...VE BIZ MODFY ETTGIMZ POLYGONLARI ARTIK MODIFY EDILMIS HALI ILE GOREBILECEGIZ DEMEKTIR
+
+//DELETE THE POLYGON VIA WFS-SERVICE..
+//Ayni mantik ile biz delete-sub-iconunu secerek sectigmiz bir polygonu silebiliyoruz, sub-delete-icon una tiklandiktan sonra sectigmiz bir polygon uzerine tiklayinca bize popup da tikladgimz polygonu silmek istedgimzi soruyor eger OK e tiklarsak
+//YANI KISACA OZETLEYECEK OLURSAK BENIM ANLADGIMIZ BIZ WFS-SERVICE UZERINDEN BIR LAYER IMIZDA YENI BIR FEATURE EKLEME, VEYA BIR FEATUER U MODIFY ETME YA DA BIR FEATURE YI DELETE ETME DURUMUNDA BU POSTGRESQL DEKI TABLO YA DEGISTIRILIYOR DOLAYISI ILE SONRASINDA GEOSERVER DA BU LAYER YA BU SHAPE FILE UZERINDEN YAYINLANAN TUM WMS-WFS SESRVICELER BU SHAPEFILE I KAYNAK OLRAK KULLANDIGI ICIN HEPSI GUNCELLENMIS OLUYOR VE BIZE DE BU GUNCELLENMELER YANSIMIS OLUYOR!!!!!!!
+//ADD-MODIFY-DELETE ISLEMLERINI YAPTIKTAN SONRA STARTEDIT VE SUBICONLARI DISABLED HALE GETIRIP SONRA ZOOM-IN ZOOM-OUT YAPARAK DENEMELIYIZ...O ZAMAN DEGISIKLIKLERI ALIYORUZ
+
+//YUKARDA SU ANA KADAR YAPTIKLARIMIZ POLYGON-BUILDIGNS FEATURE LER ICINDI BIZ BUNUN AYNISINI ORNEGIN ROADS ISIMLI LAYER SECERSEK, O ZAMAN BUTUN BUNLARI LINESTRING LER ICIN SPESIFIK ROUTE LER ICIN DE UYGULAYABILIRIZ
+
+//ZOOM-IN ZOOM-OUT YAPTGIMIZDA VERI UPDATE EDILMIS BIR VERITABANINDA GELSE DE VERITABANINDAN SHAPE FILE GEOSERVER DA SERVICE LERI HAZIRLIYOR VE HER ZOOM-IN ZOOM-OUT DA  REQUEST-RESPONSE SURECI ISLIYOR VE IMAGE DATA-WMS ICN FETCH EDILIYOR WFS ICINDE VECTOR DATA FETCH EDILIYOR..DEGISIKLIKTEN SONRA AMA SAYFA YI YENILEDGIMZ ZAMAN ARTIK  YENI EKLEDIGMZ LINESTRING LERDE DAHA ONCE VAR OLANLAR LA BIRLIKTE GELECEK...
+
+
+//LAYER LARIN GEOSERVERDAN CEKILEREK DROPDOWN-LIST- SELECT OPTIONS LAR ICERISINDE ASAGIDAKI GIBI GETIRILIYORDU 
+/*
+  function addMapLayerList(){
+    console.log("addMapLayerList")
+    $(document).ready(function(){
+      $.ajax({
+        type:"GET",
+        url:"http://localhost:9090/geoserver/wfs?request=getCapabilities",
+        datatype:"xml",
+        success:function(xml){
+          console.log("xmlxmlxmlxml: ", $(xml))
+          var select = $("#selectLayer");
+          select.append("<option class='ddindent' value='' ></option>");
+          $(xml).find("FeatureType").each(function(){
+            
+            $(this).find("Name").each(function(){
+            
+              var value = $(this).text();
+          //    console.log("value::::::", $(this).text());
+              select.append("<option class='ddindent' value='" + value +"' >"+ value+"</option>");
+            })
+          })
+        }
+      })
+    })
+
+    BESTPRACTISE..JQUERY ILE BIZ BIR HTML TAG ININ REFERANSI UZERINDEN ICERIGINI BOSALTABILIYORUZ YANI JAVASCRIPTTE  YAPTIGIMZ
+    let div = document.getElementById("div-content");
+    div.innerHTML = "";
+    Bunun aynisini jquery de su sekilde yapiyoruz 
+    let div = $("div-content");
+    div.empty(); diyerek bu sekilde daha anlasilir ve daha pratik bir sekilde yapabiliyrouz..
+  */
+
+    var editgeojson;
+    var editLayer;
+    var modifyFeatureList = [];
+    var editTask;
+    var editTaskName;
+    var modifiedFeature = false;
+    var modifyInteraction;
+    var featureAdd;
+    var snap_edit;
+
+    //Bu kullanicinin laye lar arasinda sectigi layer i start-edit icon-buttona basinca highlighet style yapmasi islemindeki layerdir, yani hightlight edilen, secilen layer in hightligh edilmesinde kullanilacak olan islemdir ilk basta dikkat edelim, source tamamen bos bunu takip edelim nasil soure nin dolduruldugunu
+    var selectedFeatureOverlay = new VectorLayer({
+      title:"Selected Feature",
+      source:new VectorSource(),
+      map:map,
+      style:highlightStyle
+    })
+
+    // var startEditingButton  = document.createElement("button");
+    // startEditingButton.innerHTML = "<img"
+    // startEditingButton.className
+
+
+    //BIZ BURDA ADD-EDIT-DELETE ISLEMLERI NASIL GERCEKLESIYOR GEOSERVER UZERINDEN BUNLARA ODAKLANACAGIZ.. ZAMAN KAYBETMEMEK ICIN 
+
+       //serverPost yani :9090 ve geoserverWorkspace i yani geo-demo yu dinamik olarak kullanabiliriz
+      //url = "http://localhost"+ serverPort +"/geoserver/"+ geoserverWorkspace +"/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=geo-demo:ind_adm12_pg&CQL_FILTER=id_1+%3E+%2715%27&outputFormat=application/json"
+      //geoserverWorkspace = geo-demo
+      //edit_layer=geo-demo:ind_adm12_pg
+      //STARTEDITING ICON BTN SINE TIKAYINCA SECILEN LAYER A AIT FEATURES LER HIGHLIGHED OLUYORDU YANI FARKLI BIR STYLE ILE STILLENEREK GELIYORLARDI ISTE BU ISLEVIN GERCEKLESTIGI YER TAM OLARAK BURASIDIR...
+      //It is createing temporarily layer, it is fetching geogjson of that particular layer, geoserver dan istenilen kismi fetch ediyor, layer imizi workspace imizi sectikten sonra bounding-box kullanilarak, url olusturuyoruz ondan dolayi da VectorSource icerisinde option olarak da strategy:bbox kullandik
+      //Bu secilen layer in edit lenmek icin map  uzerinde  hazir olmasini saglayan islemdir...COOK ONEMLI BURASI...DIKKAT EDELIM..
+      //YANI KULLANICI START-EDIT ICONUNA BASINCA BU WFS-LAYER I MAP E EKLEYEREK EDIT E HAZIR HALE GETIRIYOR, KULLANICI START-EDITING ICON BTN A BASINCA BU SEFER DE O WFS-SOURCE UZERINDEN OLUSTURULAN LAYER I KALDIRIYOR..TAM OLARAK ISLEVI ANLAYALIM...YANI KULLANICIYA TOGGLEMANTIGINDA SUNULDUGU ICIN KULLANICI BIRKEZ DAHA BASTIGI ZAMAN, MAP.REMOVELAYER(EDITGEOJSON) DIYEREK WFS-SOURCE UZERINDEN EDIT EDILMEK ICIN GETIRILEN LAYER KALDIRILMIS OLACAK..
+    editgeojson = new VectorLayer({
+      title:"Edit Layer",
+      source:new VectorSource({
+        format:new GeoJSON(),
+        url:function(extent){
+         
+          return "http://localhost:9090/geoserver/"+geoserverWorkspace+"/ows?service=WFS&version=1.0.0&request=GetFeature&typeName="+ editLayer+"&"+ "outputFormat=application/json&srsname=EPSG:3857&" + "bbox=" + extent.join(",")+ ",EPSG:3857";
+          //Burda extend sayesinde kullanici zoom-in zoom-out yaptiginda dinamik olarak datayi getirecek
+          /*
+          ol.source.Vector e gidersek ordan da url option icerisindeki function alternativine tiklarsak ...
+          FeatureUrlFunction()
+          featureloader.js, line 36
+          VectorSource sources use a function of this type to get the url to load features from.
+
+          This function takes an Extent representing the area to be loaded, a {number} representing the resolution (map units per pixel) and an Projection for the projection as arguments and returns a {string} representing the URL.
+          */
+        },
+      
+        //import {bbox} from 'ol/loadingstrategy';
+        strategy:bbox
+      }),
+      style:style//Bu yukarda point,line ve polygon feature icin tanimlanacak olan, styledir...
+    });
+    map.addLayer(editgeojson);
+
+    //ADDFEATURE A BAKALIM NASIL GERCEKLESIYOR
+    //Biz durumlarin iyi karmasiklastigi zamanlarda... status u cok aktif kullanmaliyz burda tabi status u hem boolean olarak true-false hem de status durumuna spesifik isimler atayarak da kullanabiliriz.. ornegin operationStatus="insert";  operationStatus="edit"; operationStatus="delete"; seklinde ozel durum tanimlamalari  y apmamiz gerekebilir bunlar cok onemlidir...bunlar uzerinden bazi karmasik islemleri daha kolay hale getirebiliriz.
+
+    function addFeature(){
+      //Bir onceki edit ozelliginden bir layer vs var ise onlari bir silelim ona ait interaction i bir kaldiralim
+      if(clickSelectedFeatureOverlay){
+        clickSelectedFeatureOverlay.getSource().clear();
+        map.removeLayer(clickSelectedFeatureOverlay);
+      }
+      if(modifyInteraction){
+        map.removeInteraction(modifyInteraction);
+      }
+      if(snap_edit){
+        map.removeInteraction(snap_edit);
+      }
+      //Draw interaction i biz kaynak olarak, start-edit iconuna basillinca fetch etttgimz wfs-source den getirdigmz layer in source sini kullanacagiz tabi ki cunku o layer-features lari uzerine yeni feature ekleme girsiminde bulunacagiz
+      var interactionType;
+      source_mod = editgeojson.getSource();
+      drawInteraction = new Draw({
+        source:editgeojson.getSource(),
+        type:editgeojson.getSource().getFeatures()[0].getGeometry().getType(),
+        //DINAMIK OLARK-TYPE A ERISIYORUZ...Burasi da enteresan bir yaklasim olmus, direk uzerinde islem yapacagiz layer in feature type i ne ise o type daki interaction i calistiriyor ama tabi burdaki varsayim her layer icindeki feature ler ya polygon, ya lineString-route ya da location-point ..
+         style:interactionStyle//BURASI ONEMLI CUNKU EKLEDGIMZ POLYGON VEYA LINESTRING VEYA POINT I EKLENDIGI VEYA MODIFY EDILME DURUMUDNA SPESIFIK BIR STYLE ILE YAPIYUORUZ KI DAHA IYI VE NET ANLASILSIN NE  YAPTGIMZ
+      })
+      map.addInteraction(drawInteraction);
+      //SNAPINTERACTION I DA EKLIYORUZ-SNAPPING NEDIR ONU ANLAYALIM..SNAPPING INTERACTION EKLEYINCE, BIZ LAYER UZERINDE KI HANGI FEATURE UZERINE GIDERSEK YUVARLAK KUCUK BIR DAIRE UZERINE GITGIMIZ POLYGON, LINESTRING VEYA POINT BUNLARI ISARET EDIYOR...BUNLARIN UZERINDE DOLASIYOR..AMA MODIFY-INTERACTION ILLE KARISTIRMAYALIM..MODIFY-INTERACTION DA UZERINDE BU SEKILDE YUVARLAK BIR CIRCLE ISARET EDIYORSA BU ARTIK O FEATURE NIN MODIFY EDILEBILECEGI ANLAMINA GELIYORDU, SNAP ISE SADECE HANGI FEUTURE UZERINE MOUSE ILE GELIRSEK ONU BIZE GOSTERIYOR
+   
+      snap_edit = new  Snap({
+        source:editgeojson.getSource()
+      })
+      map.addInteraction(snap_edit);
+      drawInteraction.on("drawend", function(e){
+        var feature = e.feature;
+        feature.set("geometry", feature.getGeometry());
+        //Yeni bir polygon,lineString veya point cizildiginde, cizilme islemi sona erdiginde, cizilen feature u biz burda aliyoruz son halini ve direk biz yeni cizilen tum feature leri modifiedFeatureList arrayimize ekliyoruz..
+        modifiedFeatureList.push(feature);
+      })
+
+    }
+    //Simdi cizilen yani yeni eklenen feature leri de modifiedFeatureList array imiz icerisine aldigmza gore artik bu yeni eklenen feature leri backend e yani database nasil gonderecegiz...NASIL bunlari source mize ekleyecegiz..buna bakalim..
+    //Sunu da bilelim ki, drawinteraction map uzerine tikladgimz anda baslar cift tikyalana kadar devam eder, ve cift tiklayinca artik draw-interaction sona erer
+    //Simdi kullanici orngein 2 tane polygon cizdi ve bunlari modifiedFeatureList array i icerisine ekledik 
+    //Kullanici ekleme icin cizecegi polygon-lineString veya point ler i cizdikten sonra tekrar addFeature sub-icon-Btn ye tiklamasi gerekiyordu bir sojrnaki adima gecebilmesi icin ve kullaniciya Do you want to save edits? diyr soruluyor ok diye basar ise eger o zaman da saveEdits fonksiyonu invoke ediliyor parametresine editTask  yani hangi islemi yapacaksak onu gonderiyoruz ki yapacagmiz islemin update-insert mi oldugunu ayirt edebilelim..
+
+    var clones = [];
+//editTaskName = "insert";
+    function saveEdits(editTaskName){
+        clones = [];
+        //Tum modifyFeatureList icindeki eklenen veya uzerinde modify yapilan feature leri dondurerek uzerinden gececegiz ve her bir feature dan clone olusturacagiz
+        for(var i = 0; i < modifiedFeatureList.length; i++){
+           var feature = modifiedFeatureList[i];
+           var featureProperties = feature.getProperties();
+
+           delete featureProperties.boundedBy;
+           /*
+            clone(){Feature}
+            Feature.js, line 155
+            Clone this feature. If the original feature has a geometry it is also cloned. The feature id is not set in the clone.
+            Returns:
+            The clone.
+           */
+           var clone = feature.clone();
+           //HARIKA BESTPRACTISE--FEATURE LARI KLONLAMAK
+           //The feature id is not set in the clone.Id clonlanmadigi icn id yi biz manuel olarak set ederiz...yani biz featureyi hatirlayacak olursak, kopyalayarak bir dizi icerisinde kendimiz tuttugm zaman feature leri biz muhafaza edemiyorduk yani feature lar her zaman en guncel, en son feature ne ise onu aliyordu eger clone kullanmadan yaparsak, yani biz normal dizi icerisinde tutarak yapamadigmiz feateure muhafaza etme islemini clone ile yapabiliyoruz ama clone isleminde de id yi set etmedigi icn artik onu da biz manuel olarak  yapiyoruz...
+           clone.setId(feature.getId());
+
+           //if (editTaskName != "insert"){clone.setGeometryName("the_geom")};
+           clones.push(clone);
+           //if (editTaskName == "insert"){transactWFS('insert', clone);}
+
+           if (editTaskName == "update"){transactWFS('update_batch', clones);}
+           if (editTaskName == "insert"){transactWFS('insert_batch', clones);}
+
+        }
+
+        //import WFS from 'ol/format/WFS.js';
+        var formatWFS = new WFS();
+
+        //HATIRLARSAK BIZ WFS-UZERINDE UPDATE ISLEMLERINI WFS-TRANSACT ILE YAPIYORDUK...BUNU UNUTMAYALIM!!!!
+        //BIZ DATAYI WFS-TRANSACTION DA GML FORMAT UZERINDEN DATABASE EKLEYEBILYIORUZ, DATABASE DE EDIT VE DELETE ISLEMLERINI GERCEKLESTIREBILIORUZ BUNUU UNUTMAYALIM...
+        //BU WFS-REQUEST ADD-FEATURE REQUEST ISLEMDIIR
+        var  transactWFS = function(mode, f)
+        {
+            var node;
+            //import GML from 'ol/format/GML.js';
+            //BESTPRACTISE..GEOSERVER UZERINDEN WFS-TRANSATION- CRUD OPERASYONLARI INSERT-UPDATE-DELETE BUNUN UZERINDEN YAPILDIGI ICIN GML FORMAT  YAPISINI COK IYI OGRENMEMIZ GEREKIYOR...
+            var formatGML = new GML({
+              //featureNS:"http://argeomatica.com",
+              featureNS:geoserverWorkspace,
+              //featureType:"playa_sample"
+              featureType:editLayer,
+              service:"WFS",
+              version:"1.1.0",
+              request:"GetFeature",
+              srsName:"EPSG:3857"
+            });
+
+            //switch-case icerisinde kullanilacak veya yapilacak transaction-islem-operation a gore o transaction in text-i insert-update verilmesi ve bunun swtich-case icerisinde transactin a gore process den gecirilmesi gercekten reel projelerde de kullanilan gayet surdurulebilir bir islevdir..Bu islevi cok ciddiye almaliyiz...PHP DE DE BU VE BUNA BENZERI KULLANIMLARI HER ZAMAN DIKKATE ALMALIYIZ!!
+            switch(mode)
+            {
+              /*
+                writeTransaction(inserts, updates, deletes, options){Node}
+                  format/WFS.js, line 591
+                Encode format as WFS Transaction and return the Node.
+              */
+
+                  case "insert":
+                    //parametredeki , f eklemek istedigmiz feature listesi, sonra da 4.parametre olarak GML format i veririz ve bu sekilde transaction request olusturuluyor
+                    node = formatWFS.writeTransaction([f], null, null, formatGML);
+                    break;
+
+                    //BURASI INVOKE EDILECEK ILK ADDFEATURE SUB-ICON-BUTTTON 2.KEZ TIKLANIP DA CONFIRM DEN OK E TIKLANINCA!
+                    //It will create the GML core, to support insert-functionality, bu geoserver tarafindan bir requirenementtir..
+                    //Eger geoserver WFS-transaction larinda ne tur requirementleri var bunu bilmek istersek localhostta kurdugmzu Geoserver imza login yapariz ve sol sidebar en alttaki Demos a tiklariz->Demo requests->WFS_transactionInsert.xml i seceriz bize sample insert-request kodu verir bizden talep edilen, requirements lari burdan gorebiliriz
+                    //Burda zaten gml dataformati kullanildigini goruyoruz
+                    /*
+                    Request:WFS_transactionInsert.xml
+                    URL:http://localhost:9090/geoserver/wfs
+
+                    <!--
+      YOU PROBABLY DO NOT WANT TO RUN THIS QUERY SINCE 
+       IT WILL MODIFY YOUR SOURCE DATA FILES
+       
+       It will add a simple line to the tasmania_roads dataset.
+       
+          -->
+        <wfs:Transaction service="WFS" version="1.0.0"
+          xmlns:wfs="http://www.opengis.net/wfs"
+          xmlns:topp="http://www.openplans.org/topp"
+          xmlns:gml="http://www.opengis.net/gml"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://www.opengis.net/wfs http://schemas.opengis.net/wfs/1.0.0/WFS-transaction.xsd http://www.openplans.org/topp http://localhost:8080/geoserver/wfs/DescribeFeatureType?typename=topp:tasmania_roads">
+          <wfs:Insert>
+            <topp:tasmania_roads>
+              <topp:the_geom>
+                <gml:MultiLineString srsName="http://www.opengis.net/gml/srs/epsg.xml#4326">
+                  <gml:lineStringMember>
+                    <gml:LineString>
+                      <gml:coordinates decimal="." cs="," ts=" ">
+        494475.71056415,5433016.8189323 494982.70115662,5435041.95096618
+                      </gml:coordinates>
+                    </gml:LineString>
+                  </gml:lineStringMember>
+                </gml:MultiLineString>
+              </topp:the_geom>
+              <topp:TYPE>alley</topp:TYPE>
+            </topp:tasmania_roads>
+          </wfs:Insert>
+        </wfs:Transaction>
+                    */
+                  case "insert_batch":
+
+                  node = formatWFS.writeTransaction(f, null, null, formatGML);
+                  break;  
+                  case "update":
+
+                    node = formatWFS.writeTransaction(null, [f] , null, formatGML);
+                    break;
+                  
+                  case "update_batch":
+                  node = formatWFS.writeTransaction( null, f, null, formatGML);
+                  break;  
+
+                  case "delete":
+                  node = formatWFS.writeTransaction( null, null,[f], formatGML);
+                  break; 
+
+                  case "delete_batch":
+                  node = formatWFS.writeTransaction( null, null,[f], formatGML);
+                  break; 
+            } 
+//node dedgimiz tum instructionlari tasiyan
+            var xs = new XMLSerializer();
+            var payload = xs.serializeToString(node);
+            /*
+            writeTransaction(inserts, updates, deletes, options){Node}
+            format/WFS.js, line 591
+            Encode format as WFS Transaction and return the Node.
+
+            In OpenLayers, when you want to send a WFS transaction to a server (such as GeoServer) to insert new features into a PostGIS database, you need to create an XML payload containing the necessary information about the features. This XML payload follows the specific format defined by the WFS (Web Feature Service) specification.
+            The formatWFS.writeTransaction function is used to generate this XML payload from the features you want to insert. 
+            The function takes parameters such as the features to be inserted, the feature type namespace, and the feature type name.
+            Once you have generated the XML payload using formatWFS.writeTransaction, you need to convert it into a string to send it as part of the request to the server. This is where serialization comes into play.
+            Serialization is the process of converting an object (in this case, the XML payload) into a format that can be easily transmitted over a network. 
+            In JavaScript, you can serialize an XML object into a string using the XMLSerializer API. The XMLSerializer allows you to convert an XML object into a string representation.
+            By calling xs.serializeToString(node), you are serializing the generated XML payload (stored in the node variable) into a string format.
+            This serialized string can then be included in your request payload or sent to the server using AJAX or another method.
+
+            In summary, serializing the XML payload is necessary to convert it into a string representation that can be transmitted to the server when performing a WFS transaction.
+            */
+           payload = paylad.split("feature:" +  editLayer).join(editLayer);
+           //Buraya dikkat etmeliyz..The core will generate feature attributename in the form of geometry, but in our database geometry is geom attribute..Bizim database eimzde attribute olarak geometry ne ise onu verecegiz  joinden sonra
+           /*
+           Geoserver a gidip de Layers listesinden uzerinde islem  yapacaimgz ya da iste wfs_transactioninsert islemi  yapacagimz layer a bakarsak 
+           geom	MultiPolygon	true	0/1
+           attriubte isimlerini gorebiliriz...ayni sekilde POSTGRE SQL UZERINDE DE SELECT * FROM ... ILE GOREBILIRIZ
+          
+           */
+           if(editTask == "insert") { payload.split(geoserverWorkspace + ":geometry").join(geoserverWorkspace + ":geom"); }
+
+           if(editTask == "update") { payload.split("<Name>geometry</Name>").join("<Name>geom</Name>"); }
+           // payload = payload.replace(/feature:editLayer/g,editLayer);
+
+           //URL:http://localhost:9090/geoserver/wfs demo da verilen url i giriyoruz burda
+           $.ajax("http://localhost:9090/geoserver/wfs", {
+            type:"POST",
+            dataType:"xml",
+            processData:false,
+            contentType:"text/xml",
+            data:payload.trim(),
+            success:function(data){
+              //console.log("building updated");
+              //success olursa database e kaydetmis olacak basarili bir sekilde 
+              console.log("You have done your insert or update transaction succesfully");
+            },
+            error:function(e){
+              var errorMsg = e ? (e.status + " " + e.statusText) : "";
+              alert("Error saving this feature to Geoserver <br><br>" + errorMsg);            }
+           }).done(function(){
+
+            //BESTPPRACTISE....BIZ BIR LAYER IMZA AIT SOURCE YI EGER REFRESH ETMEK ISTERSEK BU SEKILDE YAPABILIRIZ....
+              editgeojson.getSource().refresh();
+           })
+        }
+    }
+
+    //BESTPRACTISE--SECILEN BIR FEATURE YI BIZ, PRATIK OLARAK MAP UZERINDEN ASAGIDAKI GIBI BULABILIYORDUK!!
+    var selectedFeature = map.forEachFeatureAtPixel(evt.pixel,function(feature,layer){
+      return feature;
+    })
+    //BU SEKILDE EGER BIR FEATURE SECILMIS ISE ONA ERISEBILIYORDUK!!! 
+    //AYRICA DA SELECT-INTERACTION ILE DE SECILEN FEATURE A ERISEBILIYORDUK..BULABILIYORDUK KULLANICI TARAFINDAN SECILEN FEATURE YI
+
+    //MODIFY-INTERACTION IN modifyend eventinii nasil kullanacagmiza bakmak icin  openlayers da Fires: altindaki modifyend kisminda parametre de gozuken ModifyEvent linkinin uzerine tiklyaarak ModifyEvent i nasil kullanabilegimze bakabiliriz
+//modifyend (ModifyEvent) - Triggered upon feature modification end
+//ModifyEvent a tiklayinca Members: Members demek event. diyerek erisebilecegimz ozellikler demektir 
+//Members:
+//features{Collection<Feature>} event.features bize Collection icerisinde fature donuyormus o zaman biz bu icerisinde Feature olan Collection i dondururken for-dongusu ve de her bir collection elemanina erisirken, e.features.item(0)["id"] seklinde erisiyoruz...
+    modifyInteraction.on("modifyend", function(e){
+      modifiedFeature = true;
+      featureAdd = true;
+      if(modifiedFeatureList.length > 0){
+        for(var j = 0; j < modifiedFeatureList.length; j++){
+          if(e.features.item(0)["id"] == modifyFeatureList[j]["id_"]){
+            featureAdd = false;
+          }
+        }
+      }
+    })
+
+    //INSERT-MODIFY ISLEMI YUKARDAKI GIBI OLUYOR SIMDI WFS-TRANSACTIONDELETE ISLEMINE ODAKLANALIM!!! 
+
+    function selectFeatureToDelete(evt){
+      clickSelectedFeatureOverlay.getSource().clear();
+      map.removeLayer(clickSelectedFeatureOverlay);
+      var selectedFeature = map.forEachFeatureAtPixel(evt.pixel,function(feature,layer){
+        return feature;
+      })
+
+      if(selectedFeature){
+        clones = [];
+        var answer = confirm("Do you want to delete selected feature?");
+        if(answer){
+          var feature = selectedFeature;
+          var featureProperties = feature.getProperties();
+          /*
+          In OpenLayers, the "boundedBy" property is automatically added to features when they are read or parsed from a data source. It represents the bounding extent of the feature's geometry. The "boundedBy" property is typically used for optimizations or spatial indexing purposes.
+
+          In the given code, it seems that the intention is to remove the "boundedBy" property from the featureProperties object before cloning the feature. The purpose of doing this could be to exclude the "boundedBy" property from being included in the cloned feature's properties. By removing this property, it ensures that the cloned feature does not have the "boundedBy" property set.
+          */
+          delete featureProperties.boundedBy;
+          var clone = feature.clone();
+          clone.setId(feature.getId());
+          
+          clones.push(clone);
+
+          if (editTaskName == "update"){transactWFS('update_batch', clones);}
+          if (editTaskName == "insert"){transactWFS('insert_batch', clones);}
+          if (editTaskName == "delete"){transactWFS('delete', clones);}
+        
+        }
+      }
+    }
+
+    //LIVE ATTRIBUTE SEARCH-JUST LIKE GOOGLE 
+    //Sag ustte kucuk bir arama kutusu var kullanici ustune gittiginde bu kutu sola dogru genisleyerek search-input haline gelecek ve sonrasinda kullanici 3 harf aradiginda, o harflerin icinde bulundugu ne kadar deger var ise layer larda, yani geoserver dan yayinladimgiz wms-veya wfs layer lar icerisindeki-postgresql(postgis) den geoserver uzerinden yayinladigmiz yani..data dan arama yapacak ve aranan dataya uyan datalari getirecek ve kullanici listelenen ornegin city veya state lerden birine tiklayinca da o city ye hem zoom-in yapacak hem de o city ye ait style i fill-olarak highlighed hale getirecek!!ozellik bu sekilde olacak google-map-search de oldugu gibi 
+
+    var txtVal = "";
+
+    var inputBox = document.getElementById("inpt_search");
+    inputBox.onkeyup = function(){
+      var newVal = this.value.trim();
+      if(newVal == txtVal){
+
+      }else{
+        txtVal = this.value;
+        txtVal = txtVal.trim();
+        if(txtVal !== ""){
+          if(txtVal.length > 2){
+            clearResults();//Daha once gosterilen veya listelenen elementler temizlenir once
+            createLiveSearchTable();//Burda 1 kez table olusturuluyor ve response geldikce de row lar olusturuluyor buraya dikkat edelim
+
+            //HEM DISTRICTLAYER ICINDE HEM DE STATELAYER ICERISINDE ARAMA YAPMAK ICIN, IKI TABLO YA DA AYRI AYRI 2 TANE API CALL-REQUEST GONDERIYOR...DIKKKAT EDELIM...
+            $.ajax({
+              url:"resources/custom/fetch.php",
+              type:"post",
+              data:{request:"liveSearch", searchTxt:txtVal, 
+              //searchLayer is table, districtLayerName, districtTable - polbnd_ind
+              searchLayer:"public."+ districtLayerName, searchAttribute:"laa"},
+              dataType:"json",
+              success:function(response){
+                //server dan backend den data yi aldiginda, rows u olusturuyor
+                createRows(response, districtLayerName);
+              }
+            });
+          $.ajax({
+            url:"resources/custom/fetch.php",
+            type:"post",
+            data:{request:"liveSearch", searchTxt:txtVal, 
+            //searchLayer is table, districtLayerName, districtTable - 
+            //geo-demo:ind_adm12_pg - ind_adm1
+            searchLayer:"public."+ stateLayerName, searchAttribute:"name_1"},
+            dataType:"json",
+            success:function(response){
+              //server dan backend den data yi aldiginda, rows u olusturuyor
+              createRows(response, stateLayerName);
+            }
+
+          })  
+
+          //AJAX- ISLEMI VE KULLANICININ GIRDIGI SEARCH TEXT INE GORE VERITABANINDAN FILTRELEME YAPILARAK SEARCH-INPUT A GIRILEN TEXT IN ARANMASI OLAYI TAMAMEN BU AJAX-PHP ARASINDA BIR DURUMDUR MAP ILE ILGILI COK BIR DURUM YOK... 
+          //VERITABANINDAN ARANAN TEXT IN ICINDE BULUNDUGU KAYITLAR LISTELENDIKTEN SONRA, TIKLANAN ORNEGIN CITY NI HARITA DA HIGHLIGHED STYLE VE DE TIKLANAN CITY YE ZOOM-IN OLMA OZELLIGI ISE OPENLAYERS ILE GEOSERVER WFS-CQL_FILTER SERVICE DE SECILEN CITY HANGISI ISE ONUN ILE ILGILI VERITABANINDAN GELEN KAYITLARDAN, GEOSERVER-WFS-SOURCE DE FITLRELEMEDE KULLANILACAK PARAMETRELERIN GONDERILMESI ILE BIR GEOSERVER WFS-CQL_FILTER  URL I OLUSTURULARAK BU URL OPENLAYERS DA VECTORLAYER OLUSTURULUP O VECTORLAYER ICERISINDE KULLANILACAK SOURCEYE URL OLARAK KULLANILARAK REQUEST GONDERILMIS OLUR VE GEOSERVER-WFS-SOURCE DEN DATALAR OPENLAYERS ARACILIGI ILE MAP A BASILMIS OLUR BU SEKILDE...
+
+
+
+  //BURASI ONEMLI....ONCLICK METHODUNA PARAMETREYE MAP UZERINDEN WFS-FILTER REQUEST URL I HAZIRLANIRKEN KULLANILACAK, DEGERLER KULLANILIR...ONEMLIDIR..
+//createRows icerisinde tr- icindeki td icerisine yani bulunan, match olan data nin icerisinde listelenecegi td icerisine attribute ler eklenir bunlardan bir tanes ide "onClick" attribute u set edilir karsiliginda ise if(layerName == stateLayerName){td2.setAttribute("zoomToFeature(this,\''+ stateLayerName + '\', \'' + key2)";}else if(layerName == districtLayerName){td2.setAttribute("zoomToFeature(this,\''+ districtLayerName + '\', \'' + key2)";}
+
+function zoomToFeature(featureName, layerName, attributeName){
+  map.removeLayer(geojson);
+  var value_layer = layerName;
+  var value_attribute = attributeName;
+  var value_operator = "==";
+  var value_txt = featureName.innerHTML;
+  var url= 'http://localhost:9090/geoserver/geo-demo/ows?service=WFS&version=1.0.0&request=GetFeature&typeName='+ value_layer+'&CQL_FILTER='+ value_attribute + '+' + value_operator + '+"'+ value_txt + '"id_1+>+"15"&outputFormat=application/json';
+  //url-http://localhost:9090/geoserver/geo-demo/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=geo-demo:ind_adm12_pg&CQL_FILTER=id_1+>+'15'&outputFormat=application/json
+  //Kullanici arama kutucuguna arayacagi text i yazip o text e match olan liste nin layer lar icinden gelmesi bizim bildigmz veritabanindan data bulma islemidir..ajax uzerinden bunu php de yapiyoruz ama mathc olan liste icerisinden tiklanan city-veya state e gore map uzerinden filtrleme olmasi ve o secilen city niin hem highlighted ve hem de zoom-in olmasi o secilen city ye iste bunlar WFS-FILTER ISLEMI YAPILARAK MEYDANA GELEN ISLEMLERDIR....
+  //newaddGeoJsonToMap fonks icerisinde vectorLayer olusturuluyor vectorSource si ile birlikte ve vectorSource icerisine url olarak parametreden gelen url kullaniliyor ve de yani kullanicinin sectigi attribute value si, operator u , value_txt i value_layer i veriliyor...
+  newaddGeoJsonToMap(url)
+}
+
+
+
+
+          }
+        }
+      }
+    }
