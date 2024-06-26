@@ -9,7 +9,7 @@ const googleMap = new TileLayer({
   source: new XYZ({
     url: 'http://mt0.google.com/vt/lyrs=m&hl=en&x={x}&y={y}&z={z}',
     attributions:"GOOGLE-MAP",
-    cacheSize: 100,
+    cacheSize: 200,
   }),
   visible:true,
 })
